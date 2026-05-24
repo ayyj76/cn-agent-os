@@ -1,4 +1,4 @@
-database/app.db
+database/app.db*
 __pycache__/
 *.pyc
 .venv/

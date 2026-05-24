@@ -154,8 +154,22 @@ body {
   border-bottom: 1px solid rgba(255, 255, 255, 0.04) !important;
 }
 
-.layui-table-hover tr:hover, .layui-table-click tr:click {
-  background-color: rgba(255, 255, 255, 0.02) !important;
+/* Layui Table Hover/Click Override (fixes dark mode white-out) */
+.layui-table-hover,
+.layui-table-hover tr:hover, 
+tr.layui-table-hover,
+.layui-table tbody tr:hover,
+.layui-table-view .layui-table tbody tr:hover,
+.layui-table-view .layui-table-hover tbody tr:hover,
+.layui-table-click,
+.layui-table-click tr,
+.layui-table-view .layui-table tr.layui-table-hover {
+  background-color: rgba(99, 102, 241, 0.15) !important;
+  color: #ffffff !important;
+}
+
+.layui-table-click td {
+  background-color: rgba(99, 102, 241, 0.2) !important;
 }
 
 /* Modals glass styling */
