@@ -163,7 +163,13 @@
         var index = layer.open({
           type: 1, title: '新增权限定义', area: ['520px', '480px'], content: $('#form-tpl').html(),
           success: function(layero){
-            form.render();
+            // 动态填充弹窗内的模块下拉框
+            var formSelectHtml = '<option value="">请选择功能模块</option>';
+            for(var i = 0; i < modulesData.length; i++){
+              formSelectHtml += '<option value="'+modulesData[i].id+'">'+modulesData[i].module_name+'</option>';
+            }
+            layero.find('#form-module').html(formSelectHtml);
+            form.render('select');
             
             $('#btn-perm-cancel').on('click', function(){
               layer.close(index);
@@ -205,7 +211,13 @@
           var index = layer.open({
             type: 1, title: '编辑权限定义 - ' + data.permission_name, area: ['520px', '480px'], content: $('#form-tpl').html(),
             success: function(layero){
-              form.render();
+              // 动态填充弹窗内的模块下拉框
+              var formSelectHtml = '<option value="">请选择功能模块</option>';
+              for(var i = 0; i < modulesData.length; i++){
+                formSelectHtml += '<option value="'+modulesData[i].id+'">'+modulesData[i].module_name+'</option>';
+              }
+              layero.find('#form-module').html(formSelectHtml);
+              
               layero.find('input[name="id"]').val(data.id);
               layero.find('select[name="module_id"]').val(data.module_id);
               layero.find('input[name="permission_name"]').val(data.permission_name);
