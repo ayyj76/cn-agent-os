@@ -252,13 +252,20 @@
         var index = layer.open({
           type: 1, title: '新增授权用户', area: ['520px', '490px'], content: $('#form-tpl').html(),
           success: function(layero){
+            // 动态填充弹窗内的角色下拉框
+            var formRoleHtml = '';
+            for(var i = 0; i < rolesData.length; i++){
+              formRoleHtml += '<option value="'+rolesData[i].role_code+'">'+rolesData[i].role_name+'</option>';
+            }
+            layero.find('#form-role').html(formRoleHtml);
+            
             $('#form-username').prop('disabled', false).val('');
             $('#form-password').val('');
             $('#password-hint').hide();
             $('#role-row').show();
             $('#status-row').show();
             $('#form-role').prop('disabled', false);
-            fillRoleForm('user');
+            layero.find('#form-role').val('user');
             form.render();
             
             $('#btn-form-cancel').on('click', function(){
@@ -304,13 +311,20 @@
           var index = layer.open({
             type: 1, title: '编辑授权用户 - ' + data.username, area: ['520px', '510px'], content: $('#form-tpl').html(),
             success: function(layero){
+              // 动态填充弹窗内的角色下拉框
+              var formRoleHtml = '';
+              for(var i = 0; i < rolesData.length; i++){
+                formRoleHtml += '<option value="'+rolesData[i].role_code+'">'+rolesData[i].role_name+'</option>';
+              }
+              layero.find('#form-role').html(formRoleHtml);
+              
               $('#form-username').val(data.username).prop('disabled', true);
               $('#form-password').val('');
               $('#password-hint').show();
               $('#role-row').show();
               $('#status-row').show();
               $('#form-role').prop('disabled', false);
-              fillRoleForm(data.role);
+              layero.find('#form-role').val(data.role);
               form.render();
               
               form.val('user-form', {
