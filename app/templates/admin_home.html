@@ -229,10 +229,23 @@
       display: none;
       z-index: 100;
       overflow: hidden;
+      transform-origin: top right;
     }
     
     .user-dropdown.show {
       display: block;
+      animation: dropdown-fade-in 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    @keyframes dropdown-fade-in {
+      from {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
     }
     
     .user-dropdown a {
@@ -437,7 +450,7 @@
         $('.menu-group-title[data-group]').on('click', function(){
           var $items = $(this).next('.menu-items');
           var $arrow = $(this).find('.layui-icon-down');
-          $items.toggleClass('show');
+          $items.slideToggle(200);
           $arrow.toggleClass('open');
         });
 

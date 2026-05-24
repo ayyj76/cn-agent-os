@@ -301,8 +301,8 @@
         var index = layer.open({
           type: 1, title: '角色权限分配与授权', area: ['640px', '570px'], content: $('#assign-form-tpl').html(),
           success: function(layero){
-            $('#assign-module-select').html(moduleOptions);
-            form.render();
+            layero.find('#assign-module-select').html(moduleOptions);
+            form.render('select');
             
             buildPermTree(modules, perms, checkedIds, '');
             
@@ -310,19 +310,19 @@
               buildPermTree(modules, perms, checkedIds, filterData.value);
             });
             
-            $('#btn-check-all').on('click', function(){
-              $('input[name="perm_id"]').prop('checked', true);
+            layero.find('#btn-check-all').on('click', function(){
+              layero.find('input[name="perm_id"]').prop('checked', true);
               form.render('checkbox');
             });
             
-            $('#btn-uncheck-all').on('click', function(){
-              $('input[name="perm_id"]').prop('checked', false);
+            layero.find('#btn-uncheck-all').on('click', function(){
+              layero.find('input[name="perm_id"]').prop('checked', false);
               form.render('checkbox');
             });
             
-            $('#btn-save-perms').on('click', function(){
+            layero.find('#btn-save-perms').on('click', function(){
               var ids = [];
-              $('input[name="perm_id"]:checked').each(function(){ ids.push($(this).val()); });
+              layero.find('input[name="perm_id"]:checked').each(function(){ ids.push($(this).val()); });
               doPost('/admin/roles', {action: 'assign', role_id: currentRoleId, permission_ids: ids.join(',')}, function(res){
                 if(res.code === 0){
                   layer.close(index);

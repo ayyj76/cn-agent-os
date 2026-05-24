@@ -259,16 +259,16 @@
             }
             layero.find('#form-role').html(formRoleHtml);
             
-            $('#form-username').prop('disabled', false).val('');
-            $('#form-password').val('');
-            $('#password-hint').hide();
-            $('#role-row').show();
-            $('#status-row').show();
-            $('#form-role').prop('disabled', false);
+            layero.find('#form-username').prop('disabled', false).val('');
+            layero.find('#form-password').val('');
+            layero.find('#password-hint').hide();
+            layero.find('#role-row').show();
+            layero.find('#status-row').show();
+            layero.find('#form-role').prop('disabled', false);
             layero.find('#form-role').val('user');
             form.render();
             
-            $('#btn-form-cancel').on('click', function(){
+            layero.find('#btn-form-cancel').on('click', function(){
               layer.close(index);
             });
             
@@ -318,12 +318,12 @@
               }
               layero.find('#form-role').html(formRoleHtml);
               
-              $('#form-username').val(data.username).prop('disabled', true);
-              $('#form-password').val('');
-              $('#password-hint').show();
-              $('#role-row').show();
-              $('#status-row').show();
-              $('#form-role').prop('disabled', false);
+              layero.find('#form-username').val(data.username).prop('disabled', true);
+              layero.find('#form-password').val('');
+              layero.find('#password-hint').show();
+              layero.find('#role-row').show();
+              layero.find('#status-row').show();
+              layero.find('#form-role').prop('disabled', false);
               layero.find('#form-role').val(data.role);
               form.render();
               
@@ -331,7 +331,7 @@
                 id: data.id, status: data.status, remark: data.remark||''
               });
               
-              $('#btn-form-cancel').on('click', function(){
+              layero.find('#btn-form-cancel').on('click', function(){
                 layer.close(index);
               });
               
@@ -354,12 +354,12 @@
           var index = layer.open({
             type: 1, title: '修改系统用户密码', area: ['440px', '300px'], content: $('#changepwd-tpl').html(),
             success: function(layero){
-              $('#cpw-username').val(data.username);
-              $('#cpw-password').val('');
+              layero.find('#cpw-username').val(data.username);
+              layero.find('#cpw-password').val('');
               layero.find('input[name="id"]').val(data.id);
               form.render();
               
-              $('#btn-pwd-cancel').on('click', function(){
+              layero.find('#btn-pwd-cancel').on('click', function(){
                 layer.close(index);
               });
               

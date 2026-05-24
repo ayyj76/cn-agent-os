@@ -228,3 +228,92 @@ tr.layui-table-hover,
 .pulse-glow {
   animation: pulse-glow 2s infinite;
 }
+
+/* ==========================================
+   Layui Form Select Dropdown - Glassmorphic Theme Overrides
+   ========================================== */
+
+/* Dropdown list container (dl) */
+.layui-form-select dl {
+  background-color: rgba(15, 23, 42, 0.95) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5) !important;
+  padding: 6px 0 !important;
+  margin-top: 4px !important;
+}
+
+/* Dropdown options (dd) */
+.layui-form-select dl dd {
+  color: rgba(255, 255, 255, 0.75) !important;
+  padding: 0 16px !important;
+  height: 38px !important;
+  line-height: 38px !important;
+  font-size: 13px !important;
+  transition: all 0.2s ease !important;
+  background-color: transparent !important;
+}
+
+/* Hovering over an option */
+.layui-form-select dl dd:hover {
+  background-color: rgba(99, 102, 241, 0.15) !important;
+  color: #ffffff !important;
+}
+
+/* The currently selected option */
+.layui-form-select dl dd.layui-this {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(139, 92, 246, 0.3)) !important;
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+/* Search input container inside search-select */
+.layui-select-title input {
+  background-color: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-main) !important;
+  border-radius: 8px !important;
+  padding-right: 30px !important;
+}
+
+.layui-form-selected .layui-select-title input {
+  border-color: var(--primary-light) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+}
+
+/* Search input in select search options list */
+.layui-form-select dl dt {
+  color: var(--text-muted) !important;
+  font-size: 12px !important;
+}
+
+.layui-form-select dl dd.layui-select-tips {
+  color: var(--text-muted) !important;
+}
+
+/* Disabled option */
+.layui-form-select dl dd.layui-disabled {
+  color: rgba(255, 255, 255, 0.3) !important;
+  background-color: transparent !important;
+}
+
+/* Select input arrow */
+.layui-form-select .layui-edge {
+  border-top-color: var(--text-muted) !important;
+  transition: transform 0.3s ease !important;
+}
+
+.layui-form-selected .layui-edge {
+  transform: rotate(180deg) !important;
+  border-top-color: var(--primary-light) !important;
+}
+
+/* Layui dropdown panel input search box (e.g. lay-search) */
+.layui-form-select .layui-select-input {
+  background-color: rgba(15, 23, 42, 0.98) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-main) !important;
+  border-radius: 6px !important;
+}
