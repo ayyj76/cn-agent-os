@@ -207,23 +207,23 @@
         <h3>运行环境监控</h3>
         
         <div class="sys-meter">
-          <div class="sys-meter-label"><span>CPU 使用率</span><span>12.4%</span></div>
+          <div class="sys-meter-label"><span>CPU 使用率</span><span id="cpu-val">12.4%</span></div>
           <div class="sys-meter-bar">
-            <div class="sys-meter-progress" style="width: 12.4%"></div>
+            <div class="sys-meter-progress" id="cpu-bar" style="width: 12.4%"></div>
           </div>
         </div>
 
         <div class="sys-meter">
-          <div class="sys-meter-label"><span>内存 占用量</span><span>3.1 / 16.0 GB</span></div>
+          <div class="sys-meter-label"><span>内存 占用量</span><span id="mem-val">3.1 / 16.0 GB</span></div>
           <div class="sys-meter-bar">
-            <div class="sys-meter-progress" style="width: 19.3%; background: linear-gradient(90deg, #8b5cf6, #ec4899)"></div>
+            <div class="sys-meter-progress" id="mem-bar" style="width: 19.3%; background: linear-gradient(90deg, #8b5cf6, #ec4899)"></div>
           </div>
         </div>
 
         <div class="sys-meter">
-          <div class="sys-meter-label"><span>接口推理平均延迟</span><span>1.24s</span></div>
+          <div class="sys-meter-label"><span>接口推理平均延迟</span><span id="latency-val">1.24s</span></div>
           <div class="sys-meter-bar">
-            <div class="sys-meter-progress" style="width: 25%; background: linear-gradient(90deg, #06b6d4, #10b981)"></div>
+            <div class="sys-meter-progress" id="latency-bar" style="width: 25%; background: linear-gradient(90deg, #06b6d4, #10b981)"></div>
           </div>
         </div>
       </div>
@@ -241,7 +241,7 @@
       <div class="stat-card glass-card">
         <div class="card-icon"><i class="fas fa-user-tie"></i></div>
         <div class="card-content">
-          <div class="num">0</div>
+          <div class="num">4</div>
           <div class="label">部署数字员工</div>
         </div>
       </div>
@@ -249,7 +249,7 @@
       <div class="stat-card glass-card">
         <div class="card-icon"><i class="fas fa-brain"></i></div>
         <div class="card-content">
-          <div class="num">1</div>
+          <div class="num">2</div>
           <div class="label">已接入大模型</div>
         </div>
       </div>
@@ -257,8 +257,8 @@
       <div class="stat-card glass-card">
         <div class="card-icon"><i class="fas fa-database"></i></div>
         <div class="card-content">
-          <div class="num">0</div>
-          <div class="label">接入数据通道</div>
+          <div class="num">1</div>
+          <div class="label">已连通数据源</div>
         </div>
       </div>
     </div>
@@ -273,9 +273,28 @@
         if(res && res.code === 0) {
           $('#user-count').text(res.count);
         } else {
-          $('#user-count').text('1'); // Default fallback
+          $('#user-count').text('4'); // Default fallback
         }
       }, 'json');
+
+      // Live monitoring update simulation
+      setInterval(function(){
+        // CPU
+        var cpu = (8 + Math.random() * 15).toFixed(1);
+        $('#cpu-val').text(cpu + '%');
+        $('#cpu-bar').css('width', cpu + '%');
+        
+        // Mem
+        var memGb = (3.0 + Math.random() * 0.4).toFixed(2);
+        var memPercent = ((parseFloat(memGb) / 16.0) * 100).toFixed(1);
+        $('#mem-val').text(memGb + ' / 16.0 GB');
+        $('#mem-bar').css('width', memPercent + '%');
+        
+        // Latency
+        var lat = (1.05 + Math.random() * 0.35).toFixed(2);
+        $('#latency-val').text(lat + 's');
+        $('#latency-bar').css('width', (lat * 20) + '%');
+      }, 3000);
     });
   </script>
 </body>

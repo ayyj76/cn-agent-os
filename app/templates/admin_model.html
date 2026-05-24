@@ -76,6 +76,23 @@
       height: 290px;
     }
     
+    .model-card.default-card {
+      border-color: rgba(245, 158, 11, 0.45);
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.15), var(--glass-shadow);
+      animation: default-card-pulse 2s infinite alternate;
+    }
+    
+    @keyframes default-card-pulse {
+      0% {
+        border-color: rgba(245, 158, 11, 0.3);
+        box-shadow: 0 0 10px rgba(245, 158, 11, 0.1), var(--glass-shadow);
+      }
+      100% {
+        border-color: rgba(245, 158, 11, 0.65);
+        box-shadow: 0 0 20px rgba(245, 158, 11, 0.3), 0 0 8px rgba(99, 102, 241, 0.1), var(--glass-shadow);
+      }
+    }
+    
     .model-card.disabled {
       opacity: 0.5;
     }
@@ -706,7 +723,8 @@
           var tokens = formatBytes(m.total_tokens||0);
           var reqCount = m.request_count||0;
 
-          html += '<div class="model-card glass-card' + dis + '" data-id="' + m.id + '">';
+          var defaultCard = m.is_default === 1 ? ' default-card' : '';
+          html += '<div class="model-card glass-card' + dis + defaultCard + '" data-id="' + m.id + '">';
           html += '<div class="card-badge">' + defaultBadge + '</div>';
           html += '<div class="card-header">';
           html += '<div class="model-icon ' + iconBg + '"><i class="fas fa-brain"></i></div>';
