@@ -112,7 +112,7 @@
       function doPost(url, data, callback){
         var d = {_xsrf: _xsrf};
         for(var k in data){ d[k] = data[k]; }
-        $.post(url, d, callback);
+        $.post(url, d, callback, 'json');
       }
 
       var tableWhere = {action: 'list', _xsrf: _xsrf};
