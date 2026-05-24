@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block body %}
+<style>
+  body {
+    background: radial-gradient(circle at center, #111827 0%, #030712 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+  .welcome-card {
+    width: 480px;
+    max-width: 90%;
+    padding: 40px;
+    text-align: center;
+  }
+  .welcome-card h3 {
+    font-family: var(--font-title);
+    font-size: 24px;
+    margin-bottom: 12px;
+  }
+  .welcome-card p {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 30px;
+  }
+  .username-badge {
+    display: inline-block;
+    padding: 6px 16px;
+    background: rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    color: var(--primary-light);
+    border-radius: 20px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    font-size: 14px;
+  }
+  .logout-btn {
+    padding: 10px 24px;
+    font-size: 14px;
+  }
+</style>
+
+<div class="welcome-card glass-card">
+  <h3 class="text-gradient">欢迎回来</h3>
+  <p>您已成功登录 MineAgentOS 智能 Agent 系统</p>
+  
+  <div class="username-badge">
+    <i class="fas fa-user-circle" style="margin-right: 8px;"></i>{{ username }}
+  </div>
+  
+  <form action="/auth/logout" method="post">
+    {% module xsrf_form_html() %}
+    <button type="submit" class="glow-btn logout-btn">退出登录</button>
+  </form>
+</div>
+{% end %}

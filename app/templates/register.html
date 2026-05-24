@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block body %}
+<style>
+  body {
+    background: radial-gradient(circle at center, #111827 0%, #030712 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+  .register-card {
+    width: 420px;
+    max-width: 90%;
+    padding: 40px;
+    text-align: center;
+  }
+  .register-card h3 {
+    font-family: var(--font-title);
+    font-size: 24px;
+    margin-bottom: 12px;
+  }
+  .register-card p {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-bottom: 30px;
+  }
+  .back-btn {
+    padding: 10px 24px;
+    font-size: 14px;
+    display: inline-block;
+    text-decoration: none;
+    text-align: center;
+    line-height: 1;
+  }
+</style>
+
+<div class="register-card glass-card">
+  <h3 class="text-gradient">功能待开发</h3>
+  <p>用户自主注册功能在当前版本未开放，请联系系统管理员分配账号。</p>
+  
+  <a href="/auth/login" class="glow-btn back-btn">返回登录</a>
+</div>
+{% end %}

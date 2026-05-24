@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>权限管理</title>
+  <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/dist/layui-v2.13.6/layui/css/layui.css">
+  <link rel="stylesheet" href="/static/dist/fontawesome-free-5.15.4-web/css/all.min.css">
+  <style>
+    body {
+      padding: 24px;
+      margin: 0;
+      background: transparent;
+    }
+    .page-container {
+      padding: 24px;
+      min-height: calc(100vh - 48px);
+    }
+    .toolbar {
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .layui-table {
+      margin: 0;
+    }
+    .action-btn {
+      height: 38px !important;
+      line-height: 38px !important;
+      padding: 0 18px !important;
+      font-size: 13px !important;
+    }
+    .layui-form-label {
+      color: var(--text-muted) !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-container glass-card">
+    <div class="toolbar layui-form">
+      <span style="font-size:13px;color:var(--text-muted);margin-right:4px;">所属模块</span>
+      <div style="width:200px;height:38px;">
+        <select name="module_id" id="module-select">
+          <option value="">全部功能</option>
+        </select>
+      </div>
+      <button class="glow-btn action-btn" id="btn-search" style="height:38px !important;line-height:38px !important;"><i class="fas fa-search"></i> 查询</button>
+      
+      <button class="glow-btn action-btn" id="btn-add" style="margin-left:auto;height:38px !important;line-height:38px !important;background:linear-gradient(135deg, var(--success-color), #059669);box-shadow:0 4px 14px rgba(16,185,129,0.3);"><i class="fas fa-plus"></i> 新增权限</button>
+    </div>
+
+    <table class="layui-table" lay-filter="perm-table" id="perm-table"></table>
+  </div>
+
+  <!-- Permission Form Template -->
+  <script type="text/html" id="form-tpl">
+    <form class="layui-form" lay-filter="perm-form" style="padding:24px 30px 0; background: transparent;">
+      <input type="hidden" name="id" value="">
+      <div class="layui-form-item">
+        <label class="layui-form-label">所属功能</label>
+        <div class="layui-input-block">
+          <select name="module_id" lay-verify="required" lay-search id="form-module">
+            <option value="">请选择功能模块</option>
+          </select>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">权限名称</label>
+        <div class="layui-input-block">
+          <input type="text" name="permission_name" class="layui-input" placeholder="例如: 查看用户列表" autocomplete="off" required>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">权限编码</label>
+        <div class="layui-input-block">
+          <input type="text" name="permission_code" class="layui-input" placeholder="例如: user:list" autocomplete="off" required>
+        </div>
+      </div>
+      <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">权限描述</label>
+        <div class="layui-input-block">
+          <textarea name="description" class="layui-textarea" placeholder="请输入权限描述" rows="2"></textarea>
+        </div>
+      </div>
+      <div class="layui-form-item" style="margin-top: 24px;">
+        <div class="layui-input-block" style="text-align:right;">
+          <button class="glow-btn" lay-submit lay-filter="submit-form" style="height:36px;padding:0 24px;margin-right:12px;">保存</button>
+          <button class="layui-btn layui-btn-primary" type="button" id="btn-perm-cancel" style="height:36px;border-radius:8px;background:rgba(255,255,255,0.03);color:var(--text-main);border-color:var(--border-color);">取消</button>
+        </div>
+      </div>
+    </form>
+  </script>
+
+  <script src="/static/dist/layui-v2.13.6/layui/layui.js"></script>
+  <script>
+    var _xsrf = '{{ xsrf_token }}';
+
+    layui.use(['table','form','layer','jquery'], function(){
+      var table = layui.table, form = layui.form, layer = layui.layer, $ = layui.jquery;
+
+      function doPost(url, data, callback){
+        var d = {_xsrf: _xsrf};
+        for(var k in data){ d[k] = data[k]; }
+        $.post(url, d, callback);
+      }
+
+      var modulesData = [];
+      var tableWhere = {action: 'list', _xsrf: _xsrf};
+
+      doPost('/admin/modules', {action: 'list', page: 1, limit: 100}, function(res){
+        if(res.code === 0){
+          modulesData = res.data;
+          buildModuleOptions();
+        }
+      });
+
+      function buildModuleOptions(){
+        var html = '<option value="">全部功能</option>';
+        for(var i = 0; i < modulesData.length; i++){
+          html += '<option value="'+modulesData[i].id+'">'+modulesData[i].module_name+'</option>';
+        }
+        $('#module-select').html(html);
+        $('#form-module').html('<option value="">请选择功能模块</option>' + html.replace('全部功能', ''));
+        form.render('select');
+      }
+
+      table.render({
+        elem: '#perm-table',
+        url: '/admin/permissions',
+        where: tableWhere,
+        method: 'post',
+        page: {limit: 20, limits: [10, 20, 50, 100]},
+        parseData: function(res){
+          return {code: res.code, msg: res.msg, count: res.count, data: res.data};
+        },
+        cols: [[
+          {field: 'id', title: 'ID', width: 70, sort: true},
+          {field: 'module_name', title: '所属功能模块', width: 180, templet: function(d){
+            return d.module_name ? '<span class="layui-badge" style="background:rgba(99,102,241,0.1);color:var(--primary-light);border:1px solid rgba(99,102,241,0.3);">' + d.module_name + '</span>' : '--';
+          }},
+          {field: 'permission_name', title: '操作权限名称', minWidth: 150},
+          {field: 'permission_code', title: '唯一权限标识编码', width: 180},
+          {field: 'description', title: '详细权限功能描述', minWidth: 150},
+          {field: 'create_at', title: '配置时间', width: 180},
+          {title: '操作', width: 180, templet: function(){
+            return '<a class="layui-btn layui-btn-xs" style="background:#6366f1;height:26px;line-height:26px;border-radius:6px;" lay-event="edit"><i class="fas fa-edit"></i> 编辑</a><a class="layui-btn layui-btn-xs layui-btn-danger" style="height:26px;line-height:26px;border-radius:6px;" lay-event="del"><i class="fas fa-trash-alt"></i> 删除</a>';
+          }, align: 'center', fixed: 'right'}
+        ]],
+        request: {pageName: 'page', limitName: 'limit'},
+        response: {statusCode: 0}
+      });
+
+      $('#btn-search').on('click', function(){
+        var mid = $('#module-select').val();
+        table.reload('perm-table', {where: {module_id: mid, _xsrf: _xsrf}, page: {curr: 1}});
+      });
+
+      // Add permission
+      $('#btn-add').on('click', function(){
+        var index = layer.open({
+          type: 1, title: '新增权限定义', area: ['520px', '480px'], content: $('#form-tpl').html(),
+          success: function(layero){
+            form.render();
+            
+            $('#btn-perm-cancel').on('click', function(){
+              layer.close(index);
+            });
+            
+            form.on('submit(submit-form)', function(data){
+              data.field.action = 'add';
+              doPost('/admin/permissions', data.field, function(res){
+                if(res.code === 0){
+                  layer.close(index);
+                  layer.msg('添加成功', {icon: 1});
+                  table.reload('perm-table');
+                } else {
+                  layer.msg(res.msg, {icon: 2});
+                }
+              });
+              return false;
+            });
+          }
+        });
+      });
+
+      // Edit / Delete permission
+      table.on('tool(perm-table)', function(obj){
+        var data = obj.data;
+        if(obj.event === 'del'){
+          layer.confirm('确定要删除权限「'+data.permission_name+'」吗？', {icon: 3, title: '提示'}, function(cIndex){
+            doPost('/admin/permissions', {action: 'delete', id: data.id}, function(res){
+              if(res.code === 0){
+                layer.close(cIndex);
+                layer.msg('删除成功', {icon: 1});
+                table.reload('perm-table');
+              } else {
+                layer.msg(res.msg, {icon: 2});
+              }
+            });
+          });
+        } else if(obj.event === 'edit'){
+          var index = layer.open({
+            type: 1, title: '编辑权限定义 - ' + data.permission_name, area: ['520px', '480px'], content: $('#form-tpl').html(),
+            success: function(layero){
+              form.render();
+              layero.find('input[name="id"]').val(data.id);
+              layero.find('select[name="module_id"]').val(data.module_id);
+              layero.find('input[name="permission_name"]').val(data.permission_name);
+              layero.find('input[name="permission_code"]').val(data.permission_code);
+              layero.find('textarea[name="description"]').val(data.description||'');
+              form.render('select');
+              
+              $('#btn-perm-cancel').on('click', function(){
+                layer.close(index);
+              });
+              
+              form.on('submit(submit-form)', function(editData){
+                editData.field.action = 'edit';
+                doPost('/admin/permissions', editData.field, function(res){
+                  if(res.code === 0){
+                    layer.close(index);
+                    layer.msg('修改成功', {icon: 1});
+                    table.reload('perm-table');
+                  } else {
+                    layer.msg(res.msg, {icon: 2});
+                  }
+                });
+                return false;
+              });
+            }
+          });
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>功能管理</title>
+  <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/dist/layui-v2.13.6/layui/css/layui.css">
+  <link rel="stylesheet" href="/static/dist/fontawesome-free-5.15.4-web/css/all.min.css">
+  <style>
+    body {
+      padding: 24px;
+      margin: 0;
+      background: transparent;
+    }
+    .page-container {
+      padding: 24px;
+      min-height: calc(100vh - 48px);
+    }
+    .toolbar {
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .layui-table {
+      margin: 0;
+    }
+    .action-btn {
+      height: 38px !important;
+      line-height: 38px !important;
+      padding: 0 18px !important;
+      font-size: 13px !important;
+    }
+    .layui-form-label {
+      color: var(--text-muted) !important;
+    }
+    .layui-form-radio {
+      color: var(--text-main) !important;
+    }
+    .layui-form-radio i {
+      color: var(--primary-color) !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-container glass-card">
+    <div class="toolbar">
+      <button class="glow-btn action-btn" id="btn-add"><i class="fas fa-plus"></i> 新增功能</button>
+    </div>
+    <table class="layui-table" lay-filter="module-table" id="module-table"></table>
+  </div>
+
+  <!-- Module Form Template -->
+  <script type="text/html" id="form-tpl">
+    <form class="layui-form" lay-filter="module-form" style="padding:24px 30px 0; background: transparent;" id="module-form-el">
+      <input type="hidden" name="id" value="">
+      <div class="layui-form-item">
+        <label class="layui-form-label">功能名称</label>
+        <div class="layui-input-block">
+          <input type="text" name="module_name" class="layui-input" placeholder="请输入功能名称" autocomplete="off" required>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">模块编码</label>
+        <div class="layui-input-block">
+          <input type="text" name="module_code" class="layui-input" placeholder="请输入模块编码" autocomplete="off" id="form-code" required>
+          <div class="layui-form-mid layui-word-aux" style="color: var(--text-muted) !important;">编辑时不可修改</div>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">图标类名</label>
+        <div class="layui-input-block">
+          <input type="text" name="icon" class="layui-input" placeholder="layui-icon 类名，如 layui-icon-set" autocomplete="off">
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">排序权重</label>
+        <div class="layui-input-block">
+          <input type="number" name="sort_order" class="layui-input" placeholder="数字越小越靠前" autocomplete="off">
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">启用状态</label>
+        <div class="layui-input-block">
+          <input type="radio" name="status" value="1" title="启用" checked>
+          <input type="radio" name="status" value="0" title="禁用">
+        </div>
+      </div>
+      <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">功能描述</label>
+        <div class="layui-input-block">
+          <textarea name="description" class="layui-textarea" placeholder="请输入功能描述" rows="2"></textarea>
+        </div>
+      </div>
+      <div class="layui-form-item" style="margin-top: 24px;">
+        <div class="layui-input-block" style="text-align:right;">
+          <button class="glow-btn" lay-submit lay-filter="submit-form" style="height:36px;padding:0 24px;margin-right:12px;">保存</button>
+          <button class="layui-btn layui-btn-primary" type="button" id="btn-module-cancel" style="height:36px;border-radius:8px;background:rgba(255,255,255,0.03);color:var(--text-main);border-color:var(--border-color);">取消</button>
+        </div>
+      </div>
+    </form>
+  </script>
+
+  <script src="/static/dist/layui-v2.13.6/layui/layui.js"></script>
+  <script>
+    var _xsrf = '{{ xsrf_token }}';
+
+    layui.use(['table','form','layer','jquery'], function(){
+      var table = layui.table, form = layui.form, layer = layui.layer, $ = layui.jquery;
+
+      function doPost(url, data, callback){
+        var d = {_xsrf: _xsrf};
+        for(var k in data){ d[k] = data[k]; }
+        $.post(url, d, callback);
+      }
+
+      var tableWhere = {action: 'list', _xsrf: _xsrf};
+
+      table.render({
+        elem: '#module-table',
+        url: '/admin/modules',
+        where: tableWhere,
+        method: 'post',
+        page: {limit: 20, limits: [10, 20, 50, 100]},
+        parseData: function(res){
+          return {code: res.code, msg: res.msg, count: res.count, data: res.data};
+        },
+        cols: [[
+          {field: 'id', title: 'ID', width: 70, sort: true},
+          {field: 'module_name', title: '功能模块名称', minWidth: 150},
+          {field: 'module_code', title: '模块唯一编码', width: 180},
+          {field: 'icon', title: '图标样式', width: 220, templet: function(d){
+            if(d.icon) return '<i class="layui-icon '+d.icon+'" style="font-size:16px;color:var(--primary-light);margin-right:8px;"></i> ' + d.icon;
+            return '<span style="color:var(--text-muted)">未设置</span>';
+          }},
+          {field: 'sort_order', title: '排序权重', width: 100, align: 'center'},
+          {field: 'status', title: '状态', width: 100, templet: function(d){
+            return d.status === 1 ? '<span class="layui-badge" style="background:#10b981;border:none;">启用</span>' : '<span class="layui-badge" style="background:#64748b;border:none;">禁用</span>';
+          }, align: 'center'},
+          {field: 'description', title: '描述', minWidth: 150},
+          {field: 'create_at', title: '配置时间', width: 180},
+          {title: '操作', width: 180, templet: function(){
+            return '<a class="layui-btn layui-btn-xs" style="background:#6366f1;height:26px;line-height:26px;border-radius:6px;" lay-event="edit"><i class="fas fa-edit"></i> 编辑</a><a class="layui-btn layui-btn-xs layui-btn-danger" style="height:26px;line-height:26px;border-radius:6px;" lay-event="del"><i class="fas fa-trash-alt"></i> 删除</a>';
+          }, align: 'center', fixed: 'right'}
+        ]],
+        request: {pageName: 'page', limitName: 'limit'},
+        response: {statusCode: 0}
+      });
+
+      // Add module
+      $('#btn-add').on('click', function(){
+        var index = layer.open({
+          type: 1, title: '新增系统功能', area: ['520px', '530px'], content: $('#form-tpl').html(),
+          success: function(layero){
+            $('#module-form-el input[name="id"]').val('');
+            $('#module-form-el input[name="module_name"]').val('');
+            $('#module-form-el input[name="module_code"]').val('').prop('disabled', false);
+            $('#module-form-el input[name="icon"]').val('');
+            $('#module-form-el input[name="sort_order"]').val('0');
+            $('#module-form-el textarea[name="description"]').val('');
+            form.render();
+            
+            $('#btn-module-cancel').on('click', function(){
+              layer.close(index);
+            });
+            
+            form.on('submit(submit-form)', function(data){
+              data.field.action = 'add';
+              doPost('/admin/modules', data.field, function(res){
+                if(res.code === 0){
+                  layer.close(index);
+                  layer.msg('添加成功', {icon: 1});
+                  table.reload('module-table');
+                } else {
+                  layer.msg(res.msg, {icon: 2});
+                }
+              });
+              return false;
+            });
+          }
+        });
+      });
+
+      // Edit / Delete module
+      table.on('tool(module-table)', function(obj){
+        var data = obj.data;
+        if(obj.event === 'del'){
+          layer.confirm('确定要删除系统功能「'+data.module_name+'」吗？', {icon: 3, title: '提示'}, function(cIndex){
+            doPost('/admin/modules', {action: 'delete', id: data.id}, function(res){
+              if(res.code === 0){
+                layer.close(cIndex);
+                layer.msg('删除成功', {icon: 1});
+                table.reload('module-table');
+              } else {
+                layer.msg(res.msg, {icon: 2});
+              }
+            });
+          });
+        } else if(obj.event === 'edit'){
+          var index = layer.open({
+            type: 1, title: '编辑系统功能 - ' + data.module_name, area: ['520px', '550px'], content: $('#form-tpl').html(),
+            success: function(layero){
+              $('#module-form-el input[name="id"]').val(data.id);
+              $('#module-form-el input[name="module_name"]').val(data.module_name);
+              $('#module-form-el input[name="module_code"]').val(data.module_code).prop('disabled', true).addClass('layui-disabled');
+              $('#module-form-el input[name="icon"]').val(data.icon||'');
+              $('#module-form-el input[name="sort_order"]').val(data.sort_order||0);
+              $('#module-form-el textarea[name="description"]').val(data.description||'');
+              $('#module-form-el input[name="status"][value="'+data.status+'"]').prop('checked', true);
+              form.render();
+              
+              $('#btn-module-cancel').on('click', function(){
+                layer.close(index);
+              });
+              
+              form.on('submit(submit-form)', function(editData){
+                editData.field.action = 'edit';
+                doPost('/admin/modules', editData.field, function(res){
+                  if(res.code === 0){
+                    layer.close(index);
+                    layer.msg('修改成功', {icon: 1});
+                    table.reload('module-table');
+                  } else {
+                    layer.msg(res.msg, {icon: 2});
+                  }
+                });
+                return false;
+              });
+            }
+          });
+        }
+      });
+    });
+  </script>
+</body>
+</html>

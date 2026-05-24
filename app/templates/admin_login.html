@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }}</title>
+  <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/dist/layui-v2.13.6/layui/css/layui.css">
+  <link rel="stylesheet" href="/static/dist/fontawesome-free-5.15.4-web/css/all.min.css">
+  <style>
+    body {
+      background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .login-wrapper {
+      width: 960px;
+      max-width: 95vw;
+      height: 560px;
+      display: flex;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .login-left {
+      flex: 1.1;
+      position: relative;
+      background-image: url('/static/images/login_hero.png');
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 40px;
+      overflow: hidden;
+    }
+
+    .login-left::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(180deg, rgba(15,23,42,0.1) 0%, rgba(15,23,42,0.85) 100%);
+      z-index: 1;
+    }
+
+    .login-left-content {
+      position: relative;
+      z-index: 2;
+    }
+    
+    .login-left-content h1 {
+      font-family: var(--font-title);
+      font-weight: 800;
+      color: #fff;
+      font-size: 26px;
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+    
+    .login-left-content p {
+      color: rgba(255,255,255,0.7);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .login-right {
+      flex: 1;
+      padding: 50px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .login-right h2 {
+      font-family: var(--font-title);
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .login-right .subtitle {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-bottom: 30px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .login-btn {
+      width: 100%;
+      height: 44px;
+      font-size: 15px;
+      letter-spacing: 2px;
+      margin-top: 10px;
+    }
+
+    .error-msg {
+      padding: 10px 14px;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      border-radius: 8px;
+      color: #fca5a5;
+      font-size: 13px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    @media(max-width: 768px) {
+      .login-wrapper {
+        flex-direction: column;
+        height: auto;
+      }
+      .login-left {
+        min-height: 180px;
+        padding: 30px 24px;
+      }
+      .login-right {
+        padding: 36px 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-wrapper">
+    <div class="login-left">
+      <div class="login-left-content">
+        <h1>MineAgentOS</h1>
+        <p>基于大模型引擎的智能 Agent 深度管理与调度操作系统</p>
+      </div>
+    </div>
+    
+    <div class="login-right">
+      <h2 class="text-gradient">管理员登录</h2>
+      <p class="subtitle">请使用管理员账号登录后台系统</p>
+
+      {% if error %}
+      <div class="error-msg">
+        <i class="fas fa-exclamation-circle"></i>
+        <span>{{ error }}</span>
+      </div>
+      {% end %}
+
+      <form method="post" action="/admin/login" id="loginForm">
+        {% module xsrf_form_html() %}
+        <div class="form-group">
+          <label>管理员账号</label>
+          <input type="text" name="username" class="form-input-premium" placeholder="请输入管理员账号" autocomplete="off" required>
+        </div>
+        <div class="form-group">
+          <label>密码</label>
+          <input type="password" name="password" class="form-input-premium" placeholder="请输入密码" autocomplete="off" required>
+        </div>
+        <button type="submit" class="glow-btn login-btn" id="loginBtn">登 录</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="/static/dist/layui-v2.13.6/layui/layui.js"></script>
+  <script>
+    layui.use(['layer'], function(){
+      var layer = layui.layer;
+      var form = document.getElementById('loginForm');
+      form.addEventListener('submit', function(){
+        document.getElementById('loginBtn').disabled = true;
+        document.getElementById('loginBtn').textContent = '安全验证中...';
+      });
+      {% if error %}
+      layer.msg('{{ error }}', {icon: 2, time: 3000});
+      {% end %}
+    });
+  </script>
+</body>
+</html>

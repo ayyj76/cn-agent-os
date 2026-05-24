@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }}</title>
+  <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/dist/layui-v2.13.6/layui/css/layui.css">
+  <style>
+    body {
+      background-color: var(--bg-darker);
+      height: 100vh;
+      overflow: hidden;
+    }
+    
+    .admin-layout {
+      display: flex;
+      height: 100vh;
+      width: 100%;
+    }
+    
+    .admin-sidebar {
+      width: 250px;
+      min-width: 250px;
+      background: rgba(10, 15, 30, 0.95);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex-shrink: 0;
+      z-index: 10;
+    }
+    
+    .sidebar-logo {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(5, 7, 15, 0.5);
+      border-bottom: 1px solid var(--border-color);
+      font-family: var(--font-title);
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      flex-shrink: 0;
+      user-select: none;
+    }
+    
+    .sidebar-logo i {
+      margin-right: 10px;
+      font-size: 20px;
+      background: linear-gradient(135deg, var(--accent-color), var(--primary-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .sidebar-menu {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 0;
+    }
+    
+    .sidebar-menu::-webkit-scrollbar {
+      width: 4px;
+    }
+    
+    .menu-group {
+      margin-bottom: 8px;
+    }
+    
+    .menu-group-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 24px;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      user-select: none;
+    }
+    
+    .menu-group-title:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.02);
+    }
+    
+    .menu-group-title .title-text {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .menu-group-title .arrow {
+      transition: transform 0.3s;
+      font-size: 10px;
+    }
+    
+    .menu-group-title .arrow.open {
+      transform: rotate(180deg);
+    }
+    
+    .menu-items {
+      display: none;
+      padding: 4px 0;
+    }
+    
+    .menu-items.show {
+      display: block;
+    }
+    
+    .menu-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 24px 10px 48px;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 13px;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      text-decoration: none;
+      border-left: 3px solid transparent;
+    }
+    
+    .menu-item:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.04);
+    }
+    
+    .menu-item.active {
+      color: #fff;
+      background: rgba(99, 102, 241, 0.12);
+      border-left-color: var(--primary-color);
+      text-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+    }
+    
+    .menu-item .item-icon {
+      margin-right: 12px;
+      font-size: 16px;
+      width: 18px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    
+    .menu-item .pending {
+      color: rgba(255, 255, 255, 0.25);
+      font-size: 10px;
+      margin-left: 6px;
+    }
+    
+    .admin-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    .admin-header {
+      height: 64px;
+      background: rgba(10, 15, 30, 0.6);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      border-bottom: 1px solid var(--border-color);
+      flex-shrink: 0;
+      z-index: 9;
+    }
+    
+    .header-breadcrumb {
+      font-size: 14px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .header-breadcrumb span {
+      color: var(--text-main);
+      font-weight: 500;
+    }
+    
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    
+    .header-user {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      color: var(--text-main);
+      font-size: 14px;
+      padding: 6px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: rgba(255, 255, 255, 0.02);
+      transition: var(--transition-smooth);
+    }
+    
+    .header-user:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(99, 102, 241, 0.3);
+    }
+    
+    .header-user .user-icon {
+      font-size: 16px;
+      color: var(--primary-light);
+    }
+    
+    .user-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      background: rgba(17, 25, 40, 0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      box-shadow: var(--glass-shadow);
+      min-width: 140px;
+      display: none;
+      z-index: 100;
+      overflow: hidden;
+    }
+    
+    .user-dropdown.show {
+      display: block;
+    }
+    
+    .user-dropdown a {
+      display: block;
+      padding: 10px 16px;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 13px;
+      text-decoration: none;
+      transition: var(--transition-smooth);
+    }
+    
+    .user-dropdown a:hover {
+      background: rgba(99, 102, 241, 0.15);
+      color: #fff;
+    }
+    
+    .user-dropdown a.danger {
+      color: #f87171;
+    }
+    
+    .user-dropdown a.danger:hover {
+      background: rgba(239, 68, 68, 0.15);
+    }
+    
+    .admin-content {
+      flex: 1;
+      overflow: auto;
+      padding: 24px;
+      background-color: var(--bg-dark);
+    }
+    
+    .content-card {
+      min-height: calc(100vh - 64px - 48px);
+      width: 100%;
+      position: relative;
+    }
+
+    #content-frame {
+      width: 100%;
+      height: calc(100vh - 64px - 48px);
+      border: none;
+      display: none;
+      border-radius: 16px;
+      background: transparent;
+    }
+
+    .welcome-box {
+      text-align: center;
+      padding: 80px 0;
+      min-height: calc(100vh - 64px - 48px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .welcome-box h2 {
+      font-family: var(--font-title);
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    
+    .welcome-box p {
+      color: var(--text-muted);
+      font-size: 14px;
+      max-width: 500px;
+      line-height: 1.8;
+      margin-bottom: 40px;
+    }
+    
+    .welcome-box .gear-icon {
+      font-size: 80px;
+      color: var(--primary-light);
+      animation: spin 6s linear infinite;
+      margin-top: 20px;
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    @media(max-width:768px) {
+      .admin-sidebar {
+        position: fixed;
+        left: -250px;
+        top: 0;
+        bottom: 0;
+        z-index: 999;
+        transition: left .3s;
+      }
+      .admin-sidebar.open {
+        left: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <div class="admin-sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <i class="layui-icon layui-icon-console"></i>
+        <span class="text-gradient" style="font-weight: 800; font-size: 17px;">MineAgentOS</span>
+      </div>
+      <div class="sidebar-menu" id="sidebar-menu">
+        <div style="color:var(--text-muted);text-align:center;padding:40px 20px;font-size:13px;">
+          <i class="layui-icon layui-icon-loading layui-anim layui-anim-rotate layui-anim-loop" style="display:inline-block;margin-bottom:10px;font-size:24px;"></i>
+          <div>加载模块中...</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="admin-main">
+      <div class="admin-header">
+        <div class="header-breadcrumb">
+          <i class="layui-icon" style="font-size:16px;color:var(--primary-light);">&#xe68e;</i>
+          <span id="page-title">控制台</span>
+        </div>
+        
+        <div class="header-right">
+          <div class="header-user" id="user-btn">
+            <i class="layui-icon layui-icon-username user-icon"></i>
+            <span>{{ username }}</span>
+            <i class="layui-icon layui-icon-down" style="font-size:10px;color:var(--text-muted);"></i>
+            
+            <div class="user-dropdown" id="user-dropdown">
+              <a href="/admin/logout" class="danger">
+                <i class="fas fa-sign-out-alt" style="margin-right:8px;"></i>退出登录
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="admin-content">
+        <div class="content-card" id="content-area">
+          <iframe id="content-frame" src="/admin/home/welcome" style="display:none"></iframe>
+          <div class="welcome-box glass-card" id="default-welcome">
+            <h2 class="text-gradient">欢迎来到 MineAgentOS</h2>
+            <p>MineAgentOS 管理控制台提供全面的大模型引擎管理、权限配置和 Agent 工作站能力。请点击左侧菜单开始操作。</p>
+            <i class="layui-icon layui-icon-set-fill gear-icon"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var MENU_TREE = {% raw menu_tree %};
+  </script>
+  <script src="/static/dist/layui-v2.13.6/layui/layui.js"></script>
+  <script>
+    function getCookie(name) {
+      var v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)\\s*(;|$)');
+      return v ? v.pop() : '';
+    }
+    var _xsrf = getCookie('_xsrf') || '';
+
+    layui.use(['jquery', 'layer'], function(){
+      var $ = layui.jquery;
+      var layer = layui.layer;
+
+      function doPost(url, data, callback) {
+        var d = {_xsrf: _xsrf};
+        for(var k in data) { d[k] = data[k]; }
+        $.post(url, d, callback);
+      }
+
+      renderMenu(MENU_TREE);
+
+      function renderMenu(groups) {
+        var html = '';
+        for(var i = 0; i < groups.length; i++) {
+          var g = groups[i];
+          var hasItems = g.children && g.children.length > 0;
+          var showClass = i === 0 ? ' show' : '';
+          var arrowClass = i === 0 ? ' arrow open' : ' arrow';
+          html += '<div class="menu-group">';
+          
+          if(hasItems) {
+            html += '<div class="menu-group-title" data-group="'+i+'">';
+            html += '<span class="title-text"><i class="'+(g.icon||'')+'"></i>'+g.title+'</span>';
+            html += '<i class="layui-icon layui-icon-down '+arrowClass+'"></i></div>';
+            html += '<div class="menu-items'+showClass+'">';
+            for(var j = 0; j < g.children.length; j++) {
+              var c = g.children[j];
+              var pending = c.pending ? ' <span class="pending">(待开发)</span>' : '';
+              html += '<a class="menu-item'+(i===0&&j===0?' active':'')+'" data-href="'+c.href+'" data-title="'+c.title+'" data-pending="'+(c.pending?'1':'0')+'">';
+              html += '<i class="item-icon '+(c.icon||'')+'"></i>';
+              html += '<span class="item-text">'+c.title+pending+'</span></a>';
+            }
+            html += '</div>';
+          } else {
+            html += '<div class="menu-group-title"><span class="title-text"><i class="'+(g.icon||'')+'"></i>'+g.title+'</span></div>';
+          }
+          html += '</div>';
+        }
+        $('#sidebar-menu').html(html);
+
+        // Sidebar dropdown toggler
+        $('.menu-group-title[data-group]').on('click', function(){
+          var $items = $(this).next('.menu-items');
+          var $arrow = $(this).find('.layui-icon-down');
+          $items.toggleClass('show');
+          $arrow.toggleClass('open');
+        });
+
+        // Sidebar item click handler
+        $('.menu-item').on('click', function(){
+          var href = $(this).data('href');
+          var title = $(this).data('title');
+          var pending = $(this).data('pending') === '1';
+          
+          if (pending) {
+            layer.msg(title + ' 模块正在全力研发中，敬请期待！', {icon: 0, time: 2000});
+            return;
+          }
+          
+          if(!href || href === 'javascript:;') return;
+          
+          $('.menu-item').removeClass('active');
+          $(this).addClass('active');
+          $('#page-title').html('<span>' + title + '</span>');
+          
+          $('#default-welcome').hide();
+          $('#content-frame').show().attr('src', href);
+        });
+      }
+
+      // User Profile menu toggler
+      $('#user-btn').on('click', function(e){
+        e.stopPropagation();
+        $('#user-dropdown').toggleClass('show');
+      });
+
+      $(document).on('click', function(){
+        $('#user-dropdown').removeClass('show');
+      });
+    });
+  </script>
+</body>
+</html>

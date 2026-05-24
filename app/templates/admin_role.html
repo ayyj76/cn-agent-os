@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>角色管理</title>
+  <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/dist/layui-v2.13.6/layui/css/layui.css">
+  <link rel="stylesheet" href="/static/dist/fontawesome-free-5.15.4-web/css/all.min.css">
+  <style>
+    body {
+      padding: 24px;
+      margin: 0;
+      background: transparent;
+    }
+    .page-container {
+      padding: 24px;
+      min-height: calc(100vh - 48px);
+    }
+    .toolbar {
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .layui-table {
+      margin: 0;
+    }
+    .perm-panel {
+      padding: 20px 24px;
+      background: transparent;
+    }
+    .perm-module {
+      margin-bottom: 20px;
+    }
+    .perm-module-title {
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+      font-family: var(--font-title);
+      font-size: 14px;
+    }
+    .perm-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding-left: 12px;
+    }
+    .action-btn {
+      height: 38px !important;
+      line-height: 38px !important;
+      padding: 0 18px !important;
+      font-size: 13px !important;
+    }
+    .layui-form-label {
+      color: var(--text-muted) !important;
+    }
+    .layui-form-radio {
+      color: var(--text-main) !important;
+    }
+    .layui-form-radio i {
+      color: var(--primary-color) !important;
+    }
+    .layui-form-checkbox span {
+      background: transparent !important;
+      color: var(--text-main) !important;
+    }
+    .layui-form-checkbox i {
+      border-color: var(--border-color) !important;
+      background: rgba(255, 255, 255, 0.03) !important;
+    }
+    .layui-form-checked i {
+      background: var(--primary-color) !important;
+      border-color: var(--primary-color) !important;
+      color: #fff !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-container glass-card">
+    <div class="toolbar">
+      <button class="glow-btn action-btn" id="btn-add"><i class="fas fa-plus"></i> 新增角色</button>
+    </div>
+    <table class="layui-table" lay-filter="role-table" id="role-table"></table>
+  </div>
+
+  <!-- Role Form Template -->
+  <script type="text/html" id="role-form-tpl">
+    <form class="layui-form" lay-filter="role-form" style="padding:24px 30px 0; background: transparent;" id="role-form-el">
+      <input type="hidden" name="id" value="">
+      <div class="layui-form-item">
+        <label class="layui-form-label">角色编码</label>
+        <div class="layui-input-block">
+          <input type="text" name="role_code" class="layui-input" placeholder="例如 editor" autocomplete="off" id="el-role_code" required>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">角色名称</label>
+        <div class="layui-input-block">
+          <input type="text" name="role_name" class="layui-input" placeholder="例如 内容编辑员" autocomplete="off" required>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">角色状态</label>
+        <div class="layui-input-block">
+          <input type="radio" name="status" value="1" title="启用" checked>
+          <input type="radio" name="status" value="0" title="禁用">
+        </div>
+      </div>
+      <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">角色描述</label>
+        <div class="layui-input-block">
+          <textarea name="description" class="layui-textarea" placeholder="请输入角色描述说明..." rows="2"></textarea>
+        </div>
+      </div>
+      <div class="layui-form-item" style="margin-top: 24px;">
+        <div class="layui-input-block" style="text-align:right;">
+          <button class="glow-btn" lay-submit lay-filter="submit-role-form" style="height:36px;padding:0 24px;margin-right:12px;">保存</button>
+          <button class="layui-btn layui-btn-primary" type="button" id="btn-role-cancel" style="height:36px;border-radius:8px;background:rgba(255,255,255,0.03);color:var(--text-main);border-color:var(--border-color);">取消</button>
+        </div>
+      </div>
+    </form>
+  </script>
+
+  <!-- Permission Assignment Dialog Template -->
+  <script type="text/html" id="assign-form-tpl">
+    <div class="perm-panel layui-form">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <span style="font-size:13px;color:var(--text-muted);">过滤功能模块</span>
+        <div style="width:200px;height:38px;">
+          <select id="assign-module-select" lay-filter="assign-module">
+            <option value="">全部功能</option>
+          </select>
+        </div>
+      </div>
+      <div id="perm-tree-container" style="border:1px solid var(--border-color);border-radius:12px;padding:20px;max-height:360px;overflow-y:auto;background:rgba(255,255,255,0.01);"></div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
+        <button class="layui-btn layui-btn-primary" id="btn-uncheck-all" style="height:36px;border-radius:8px;background:rgba(255,255,255,0.03);color:var(--text-main);border-color:var(--border-color);">清除全选</button>
+        <button class="layui-btn layui-btn-primary" id="btn-check-all" style="height:36px;border-radius:8px;background:rgba(255,255,255,0.03);color:var(--text-main);border-color:var(--border-color);">全选</button>
+        <button class="glow-btn" id="btn-save-perms" style="height:36px;padding:0 20px;">确认保存分配</button>
+      </div>
+    </div>
+  </script>
+
+  <script src="/static/dist/layui-v2.13.6/layui/layui.js"></script>
+  <script>
+    var _xsrf = '{{ xsrf_token }}';
+
+    layui.use(['table','form','layer','jquery'], function(){
+      var table = layui.table, form = layui.form, layer = layui.layer, $ = layui.jquery;
+
+      function doPost(url, data, callback){
+        var d = {_xsrf: _xsrf};
+        for(var k in data){ d[k] = data[k]; }
+        $.post(url, d, callback);
+      }
+
+      var tableWhere = {action: 'list', _xsrf: _xsrf};
+
+      table.render({
+        elem: '#role-table',
+        url: '/admin/roles',
+        where: tableWhere,
+        method: 'post',
+        parseData: function(res){ return {code: res.code, msg: res.msg, data: res.data}; },
+        cols: [[
+          {field: 'id', title: 'ID', width: 70, sort: true},
+          {field: 'role_code', title: '角色代码 (Code)', width: 180},
+          {field: 'role_name', title: '角色名称 (Name)', width: 180},
+          {field: 'description', title: '角色权限说明', minWidth: 200},
+          {field: 'is_default', title: '角色类型', width: 130, templet: function(d){
+            return d.is_default === 1 ? '<span class="layui-badge" style="background:linear-gradient(135deg, #f59e0b, #d97706);border:none;">系统预留</span>' : '<span style="color:var(--text-muted);">-</span>';
+          }, align: 'center'},
+          {field: 'status', title: '启用状态', width: 100, templet: function(d){
+            return d.status === 1 ? '<span class="layui-badge" style="background:#10b981;border:none;">启用</span>' : '<span class="layui-badge" style="background:#64748b;border:none;">禁用</span>';
+          }, align: 'center'},
+          {field: 'create_at', title: '配置时间', width: 180},
+          {title: '操作', width: 300, templet: function(d){
+            if(d.is_default === 1){
+              return '<a class="layui-btn layui-btn-xs" style="background:#8b5cf6;height:26px;line-height:26px;border-radius:6px;" lay-event="assign"><i class="fas fa-lock"></i> 授权权限</a><span style="color:var(--text-muted);font-size:12px;margin-left:12px;">不可编辑/删除</span>';
+            }
+            return '<a class="layui-btn layui-btn-xs" style="background:#6366f1;height:26px;line-height:26px;border-radius:6px;" lay-event="edit"><i class="fas fa-edit"></i> 编辑</a><a class="layui-btn layui-btn-xs" style="background:#8b5cf6;height:26px;line-height:26px;border-radius:6px;" lay-event="assign"><i class="fas fa-lock"></i> 授权权限</a><a class="layui-btn layui-btn-xs layui-btn-danger" style="height:26px;line-height:26px;border-radius:6px;" lay-event="del"><i class="fas fa-trash-alt"></i> 删除</a>';
+          }, align: 'center', fixed: 'right'}
+        ]],
+        page: false,
+        response: {statusCode: 0}
+      });
+
+      // Add role
+      $('#btn-add').on('click', function(){
+        var index = layer.open({
+          type: 1, title: '新增安全角色', area: ['520px', '450px'], content: $('#role-form-tpl').html(),
+          success: function(layero){
+            $('#el-role_code').prop('disabled', false).val('');
+            form.render();
+            
+            $('#btn-role-cancel').on('click', function(){
+              layer.close(index);
+            });
+            
+            form.on('submit(submit-role-form)', function(data){
+              data.field.action = 'add';
+              doPost('/admin/roles', data.field, function(res){
+                if(res.code === 0){
+                  layer.close(index);
+                  layer.msg('添加成功', {icon: 1});
+                  table.reload('role-table');
+                } else {
+                  layer.msg(res.msg, {icon: 2});
+                }
+              });
+              return false;
+            });
+          }
+        });
+      });
+
+      var currentRoleId = 0;
+      var allPerms = [];
+      var allModules = [];
+
+      // Grid actions
+      table.on('tool(role-table)', function(obj){
+        var data = obj.data;
+        if(data.is_default === 1 && (obj.event === 'edit' || obj.event === 'del')){
+          layer.msg('系统预置默认角色不可编辑或删除', {icon: 0});
+          return;
+        }
+        
+        if(obj.event === 'del'){
+          layer.confirm('确定要彻底删除安全角色「'+data.role_name+'」吗？', {icon: 3, title: '提示'}, function(cIndex){
+            doPost('/admin/roles', {action: 'delete', id: data.id}, function(res){
+              if(res.code === 0){
+                layer.close(cIndex);
+                layer.msg('删除成功', {icon: 1});
+                table.reload('role-table');
+              } else {
+                layer.msg(res.msg, {icon: 2});
+              }
+            });
+          });
+        } else if(obj.event === 'edit'){
+          var index = layer.open({
+            type: 1, title: '编辑安全角色 - ' + data.role_name, area: ['520px', '460px'], content: $('#role-form-tpl').html(),
+            success: function(layero){
+              $('#el-role_code').val(data.role_code).prop('disabled', true).addClass('layui-disabled');
+              form.render();
+              
+              form.val('role-form', {
+                id: data.id, role_name: data.role_name, status: data.status, description: data.description||''
+              });
+              
+              $('#btn-role-cancel').on('click', function(){
+                layer.close(index);
+              });
+              
+              form.on('submit(submit-role-form)', function(editData){
+                editData.field.action = 'edit';
+                doPost('/admin/roles', editData.field, function(res){
+                  if(res.code === 0){
+                    layer.close(index);
+                    layer.msg('修改成功', {icon: 1});
+                    table.reload('role-table');
+                  } else {
+                    layer.msg(res.msg, {icon: 2});
+                  }
+                });
+                return false;
+              });
+            }
+          });
+        } else if(obj.event === 'assign'){
+          currentRoleId = data.id;
+          doPost('/admin/roles', {action: 'all_modules'}, function(res){
+            if(res.code === 0){
+              allModules = res.data;
+              doPost('/admin/roles', {action: 'all_perms'}, function(res2){
+                if(res2.code === 0){
+                  allPerms = res2.data;
+                  doPost('/admin/roles', {action: 'perms', role_id: currentRoleId}, function(res3){
+                    if(res3.code === 0){
+                      var checkedIds = res3.data;
+                      showAssignPanel(allModules, allPerms, checkedIds);
+                    }
+                  });
+                }
+              });
+            }
+          });
+        }
+      });
+
+      function showAssignPanel(modules, perms, checkedIds){
+        var moduleOptions = '<option value="">全部功能</option>';
+        for(var i = 0; i < modules.length; i++){
+          moduleOptions += '<option value="'+modules[i].id+'">'+modules[i].module_name+'</option>';
+        }
+        
+        var index = layer.open({
+          type: 1, title: '角色权限分配与授权', area: ['640px', '570px'], content: $('#assign-form-tpl').html(),
+          success: function(layero){
+            $('#assign-module-select').html(moduleOptions);
+            form.render();
+            
+            buildPermTree(modules, perms, checkedIds, '');
+            
+            form.on('select(assign-module)', function(filterData){
+              buildPermTree(modules, perms, checkedIds, filterData.value);
+            });
+            
+            $('#btn-check-all').on('click', function(){
+              $('input[name="perm_id"]').prop('checked', true);
+              form.render('checkbox');
+            });
+            
+            $('#btn-uncheck-all').on('click', function(){
+              $('input[name="perm_id"]').prop('checked', false);
+              form.render('checkbox');
+            });
+            
+            $('#btn-save-perms').on('click', function(){
+              var ids = [];
+              $('input[name="perm_id"]:checked').each(function(){ ids.push($(this).val()); });
+              doPost('/admin/roles', {action: 'assign', role_id: currentRoleId, permission_ids: ids.join(',')}, function(res){
+                if(res.code === 0){
+                  layer.close(index);
+                  layer.msg('授权保存成功', {icon: 1});
+                } else {
+                  layer.msg(res.msg, {icon: 2});
+                }
+              });
+            });
+          }
+        });
+      }
+
+      function buildPermTree(modules, perms, checkedIds, moduleId){
+        var html = '';
+        var filtered = moduleId ? modules.filter(function(m){ return m.id == moduleId; }) : modules;
+        
+        for(var i = 0; i < filtered.length; i++){
+          var mod = filtered[i];
+          var modPerms = perms.filter(function(p){ return p.module_id == mod.id; });
+          if(modPerms.length === 0) continue;
+          
+          html += '<div class="perm-module">';
+          html += '<div class="perm-module-title">' + mod.module_name + '</div>';
+          html += '<div class="perm-list">';
+          for(var j = 0; j < modPerms.length; j++){
+            var p = modPerms[j];
+            var isCheck = checkedIds.indexOf(p.id) >= 0 ? 'checked' : '';
+            html += '<label style="display:flex;align-items:center;"><input type="checkbox" name="perm_id" value="'+p.id+'" title="'+p.permission_name+'" '+isCheck+'></label>';
+          }
+          html += '</div></div>';
+        }
+        
+        if(html === ''){
+          html = '<div style="text-align:center;color:var(--text-muted);padding:40px 0;"><i class="fas fa-exclamation-triangle" style="font-size:24px;display:block;margin-bottom:12px;"></i>该功能模块下暂未配置权限描述项</div>';
+        }
+        
+        $('#perm-tree-container').html(html);
+        layui.form.render('checkbox');
+      }
+    });
+  </script>
+</body>
+</html>

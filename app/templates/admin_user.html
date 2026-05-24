@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户管理</title>
+  <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/dist/layui-v2.13.6/layui/css/layui.css">
+  <link rel="stylesheet" href="/static/dist/fontawesome-free-5.15.4-web/css/all.min.css">
+  <style>
+    body {
+      padding: 24px;
+      margin: 0;
+      background: transparent;
+    }
+    .page-container {
+      padding: 24px;
+      min-height: calc(100vh - 48px);
+    }
+    .toolbar {
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .layui-table {
+      margin: 0;
+    }
+    .sys-user-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning-color);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .action-btn {
+      height: 32px !important;
+      line-height: 32px !important;
+      padding: 0 16px !important;
+      font-size: 13px !important;
+    }
+    .layui-form-label {
+      color: var(--text-muted) !important;
+    }
+    .layui-form-radio {
+      color: var(--text-main) !important;
+    }
+    .layui-form-radio i {
+      color: var(--primary-color) !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-container glass-card">
+    <div class="toolbar layui-form">
+      <input type="text" name="keyword" placeholder="搜索用户名" class="form-input-premium" style="width:180px;height:38px;">
+      
+      <div style="width:140px;height:38px;">
+        <select name="role" id="role-select">
+          <option value="">全部角色</option>
+        </select>
+      </div>
+      
+      <div style="width:120px;height:38px;">
+        <select name="status">
+          <option value="-1">全部状态</option>
+          <option value="1">正常</option>
+          <option value="0">禁用</option>
+        </select>
+      </div>
+      
+      <button class="glow-btn action-btn" id="btn-search" style="height:38px !important;line-height:38px !important;"><i class="fas fa-search"></i> 搜索</button>
+      <button class="layui-btn layui-btn-primary" id="btn-reset" style="height:38px;line-height:38px;border-radius:8px;background:rgba(255,255,255,0.03);color:var(--text-main);border-color:var(--border-color);">重置</button>
+      
+      <button class="glow-btn action-btn" id="btn-add" style="margin-left:auto;height:38px !important;line-height:38px !important;background:linear-gradient(135deg, var(--success-color), #059669);box-shadow:0 4px 14px rgba(16,185,129,0.3);"><i class="fas fa-plus"></i> 新增用户</button>
+      <button class="glow-btn action-btn" id="btn-batch-del" style="height:38px !important;line-height:38px !important;background:linear-gradient(135deg, var(--danger-color), #dc2626);box-shadow:0 4px 14px rgba(239,68,68,0.3);"><i class="fas fa-trash-alt"></i> 批量删除</button>
+    </div>
+    
+    <table class="layui-table" lay-filter="user-table" id="user-table"></table>
+  </div>
+
+  <!-- User Form Template -->
+  <script type="text/html" id="form-tpl">
+    <form class="layui-form" lay-filter="user-form" style="padding:24px 30px 0; background: transparent;" id="user-form-el">
+      <input type="hidden" name="id" value="">
+      <div class="layui-form-item">
+        <label class="layui-form-label">用户名</label>
+        <div class="layui-input-block">
+          <input type="text" name="username" class="layui-input" placeholder="请输入用户名" autocomplete="off" id="form-username" required>
+        </div>
+      </div>
+      <div class="layui-form-item" id="password-row">
+        <label class="layui-form-label">密码</label>
+        <div class="layui-input-block">
+          <input type="password" name="password" class="layui-input" placeholder="请输入密码" autocomplete="off" id="form-password">
+          <div class="layui-form-mid layui-word-aux" id="password-hint" style="color:var(--text-muted) !important;display:none">留空则不修改密码</div>
+        </div>
+      </div>
+      <div class="layui-form-item" id="role-row">
+        <label class="layui-form-label">角色</label>
+        <div class="layui-input-block">
+          <select name="role" id="form-role"></select>
+        </div>
+      </div>
+      <div class="layui-form-item" id="status-row">
+        <label class="layui-form-label">状态</label>
+        <div class="layui-input-block">
+          <input type="radio" name="status" value="1" title="正常" checked>
+          <input type="radio" name="status" value="0" title="禁用">
+        </div>
+      </div>
+      <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">备注</label>
+        <div class="layui-input-block">
+          <textarea name="remark" class="layui-textarea" placeholder="请输入备注" rows="2"></textarea>
+        </div>
+      </div>
+      <div class="layui-form-item" style="margin-top: 24px;">
+        <div class="layui-input-block" style="text-align:right;">
+          <button class="glow-btn" lay-submit lay-filter="submit-form" style="height:36px;padding:0 24px;margin-right:12px;">保存</button>
+          <button class="layui-btn layui-btn-primary" type="button" id="btn-form-cancel" style="height:36px;border-radius:8px;background:rgba(255,255,255,0.03);color:var(--text-main);border-color:var(--border-color);">取消</button>
+        </div>
+      </div>
+    </form>
+  </script>
+
+  <!-- Password Modification Template -->
+  <script type="text/html" id="changepwd-tpl">
+    <form class="layui-form" style="padding:24px 30px 0; background: transparent;" id="changepwd-form">
+      <input type="hidden" name="id" value="">
+      <div class="layui-form-item">
+        <label class="layui-form-label">用户名</label>
+        <div class="layui-input-block">
+          <input type="text" class="layui-input" disabled id="cpw-username" style="opacity: 0.6;">
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">新密码</label>
+        <div class="layui-input-block">
+          <input type="password" name="password" class="layui-input" placeholder="请输入新密码" autocomplete="off" id="cpw-password" required>
+        </div>
+      </div>
+      <div class="layui-form-item" style="margin-top: 24px;">
+        <div class="layui-input-block" style="text-align:right;">
+          <button class="glow-btn" lay-submit lay-filter="submit-changepwd" style="height:36px;padding:0 20px;margin-right:12px;">确认修改</button>
+          <button class="layui-btn layui-btn-primary" type="button" id="btn-pwd-cancel" style="height:36px;border-radius:8px;background:rgba(255,255,255,0.03);color:var(--text-main);border-color:var(--border-color);">取消</button>
+        </div>
+      </div>
+    </form>
+  </script>
+
+  <script src="/static/dist/layui-v2.13.6/layui/layui.js"></script>
+  <script>
+    var _xsrf = '{{ xsrf_token }}';
+
+    layui.use(['table','form','layer','jquery'], function(){
+      var table = layui.table, form = layui.form, layer = layui.layer, $ = layui.jquery;
+
+      function doPost(url, data, callback){
+        var d = {_xsrf: _xsrf};
+        for(var k in data){ d[k] = data[k]; }
+        $.post(url, d, callback);
+      }
+
+      var rolesData = [];
+      var tableWhere = {action: 'list', _xsrf: _xsrf};
+
+      doPost('/admin/users', {action: 'roles'}, function(res){
+        if(res.code === 0){
+          rolesData = res.data;
+          buildRoleOptions(rolesData);
+        }
+      });
+
+      function buildRoleOptions(roles){
+        var searchHtml = '<option value="">全部角色</option>';
+        var formHtml = '';
+        for(var i = 0; i < roles.length; i++){
+          searchHtml += '<option value="'+roles[i].role_code+'">'+roles[i].role_name+'</option>';
+          formHtml += '<option value="'+roles[i].role_code+'">'+roles[i].role_name+'</option>';
+        }
+        $('#role-select').html(searchHtml);
+        $('#form-role').html(formHtml);
+        form.render('select');
+      }
+
+      table.render({
+        elem: '#user-table',
+        url: '/admin/users',
+        where: tableWhere,
+        method: 'post',
+        page: {limit: 20, limits: [10, 20, 50, 100]},
+        parseData: function(res){
+          return {code: res.code, msg: res.msg, count: res.count, data: res.data};
+        },
+        cols: [[
+          {type: 'checkbox', fixed: 'left'},
+          {field: 'id', title: 'ID', width: 70, sort: true, fixed: 'left'},
+          {field: 'username', title: '用户名', width: 180, templet: function(d){
+            if(d.username === 'admin') return d.username + ' <span class="sys-user-tag"><i class="fas fa-shield-alt"></i> 系统用户</span>';
+            return d.username;
+          }},
+          {field: 'role_display', title: '对应角色', width: 150, templet: function(d){
+            if(d.role === 'admin') return '<span class="layui-badge" style="background:linear-gradient(135deg, #f59e0b, #d97706);border:none;">' + (d.role_display||'超级管理员') + '</span>';
+            return '<span class="layui-badge" style="background:linear-gradient(135deg, #6366f1, #3b82f6);border:none;">' + (d.role_display||d.role) + '</span>';
+          }},
+          {field: 'status', title: '账号状态', width: 100, templet: function(d){
+            return d.status === 1 ? '<span class="layui-badge" style="background:#10b981;border:none;">正常</span>' : '<span class="layui-badge" style="background:#64748b;border:none;">禁用</span>';
+          }, align: 'center'},
+          {field: 'remark', title: '备注描述', minWidth: 150},
+          {field: 'create_at', title: '创建时间', width: 180},
+          {field: 'update_at', title: '更新时间', width: 180},
+          {title: '操作', width: 200, templet: function(d){
+            if(d.username === 'admin'){
+              return '<a class="layui-btn layui-btn-xs" style="background:#f59e0b;height:26px;line-height:26px;border-radius:6px;" lay-event="changepwd"><i class="fas fa-key"></i> 改密</a><span style="color:var(--text-muted);font-size:12px;margin-left:8px;">不可编辑/删除</span>';
+            }
+            return '<a class="layui-btn layui-btn-xs" style="background:#6366f1;height:26px;line-height:26px;border-radius:6px;" lay-event="edit"><i class="fas fa-edit"></i> 编辑</a><a class="layui-btn layui-btn-xs layui-btn-danger" style="height:26px;line-height:26px;border-radius:6px;" lay-event="del"><i class="fas fa-trash-alt"></i> 删除</a>';
+          }, align: 'center', fixed: 'right'}
+        ]],
+        request: {pageName: 'page', limitName: 'limit'},
+        response: {statusCode: 0}
+      });
+
+      $('#btn-search').on('click', function(){
+        var keyword = $('input[name="keyword"]').val();
+        var role = $('select[name="role"]').val();
+        var status = $('select[name="status"]').val();
+        table.reload('user-table', {where: {keyword: keyword, role: role, status: status, _xsrf: _xsrf}, page: {curr: 1}});
+      });
+
+      $('#btn-reset').on('click', function(){
+        $('input[name="keyword"]').val('');
+        $('select[name="role"]').val('');
+        $('select[name="status"]').val('-1');
+        form.render('select');
+        table.reload('user-table', {where: {keyword: '', role: '', status: -1, _xsrf: _xsrf}, page: {curr: 1}});
+      });
+
+      function fillRoleForm(roleCode){
+        $('#form-role option').each(function(){
+          if($(this).val() === roleCode){ $(this).prop('selected', true); }
+        });
+        form.render('select');
+      }
+
+      // Add user
+      $('#btn-add').on('click', function(){
+        var index = layer.open({
+          type: 1, title: '新增授权用户', area: ['520px', '490px'], content: $('#form-tpl').html(),
+          success: function(layero){
+            $('#form-username').prop('disabled', false).val('');
+            $('#form-password').val('');
+            $('#password-hint').hide();
+            $('#role-row').show();
+            $('#status-row').show();
+            $('#form-role').prop('disabled', false);
+            fillRoleForm('user');
+            form.render();
+            
+            $('#btn-form-cancel').on('click', function(){
+              layer.close(index);
+            });
+            
+            form.on('submit(submit-form)', function(data){
+              data.field.action = 'add';
+              doPost('/admin/users', data.field, function(res){
+                if(res.code === 0){
+                  layer.close(index);
+                  layer.msg('添加成功', {icon: 1});
+                  table.reload('user-table');
+                } else {
+                  layer.msg(res.msg, {icon: 2});
+                }
+              });
+              return false;
+            });
+          }
+        });
+      });
+
+      // Action row handler
+      table.on('tool(user-table)', function(obj){
+        var data = obj.data;
+        if(obj.event === 'del'){
+          if(data.username === 'admin'){ layer.msg('系统用户不能删除', {icon: 0}); return; }
+          layer.confirm('确定要注销用户「'+data.username+'」吗？', {icon: 3, title: '提示'}, function(cIndex){
+            doPost('/admin/users', {action: 'delete', id: data.id}, function(res){
+              if(res.code === 0){
+                layer.close(cIndex);
+                layer.msg('注销成功', {icon: 1});
+                table.reload('user-table');
+              } else {
+                layer.msg(res.msg, {icon: 2});
+              }
+            });
+          });
+        } else if(obj.event === 'edit') {
+          if(data.username === 'admin'){ layer.msg('系统用户不能编辑，请使用"改密"功能', {icon: 0}); return; }
+          
+          var index = layer.open({
+            type: 1, title: '编辑授权用户 - ' + data.username, area: ['520px', '510px'], content: $('#form-tpl').html(),
+            success: function(layero){
+              $('#form-username').val(data.username).prop('disabled', true);
+              $('#form-password').val('');
+              $('#password-hint').show();
+              $('#role-row').show();
+              $('#status-row').show();
+              $('#form-role').prop('disabled', false);
+              fillRoleForm(data.role);
+              form.render();
+              
+              form.val('user-form', {
+                id: data.id, status: data.status, remark: data.remark||''
+              });
+              
+              $('#btn-form-cancel').on('click', function(){
+                layer.close(index);
+              });
+              
+              form.on('submit(submit-form)', function(editData){
+                editData.field.action = 'edit';
+                doPost('/admin/users', editData.field, function(res){
+                  if(res.code === 0){
+                    layer.close(index);
+                    layer.msg('修改成功', {icon: 1});
+                    table.reload('user-table');
+                  } else {
+                    layer.msg(res.msg, {icon: 2});
+                  }
+                });
+                return false;
+              });
+            }
+          });
+        } else if(obj.event === 'changepwd') {
+          var index = layer.open({
+            type: 1, title: '修改系统用户密码', area: ['440px', '300px'], content: $('#changepwd-tpl').html(),
+            success: function(layero){
+              $('#cpw-username').val(data.username);
+              $('#cpw-password').val('');
+              layero.find('input[name="id"]').val(data.id);
+              form.render();
+              
+              $('#btn-pwd-cancel').on('click', function(){
+                layer.close(index);
+              });
+              
+              form.on('submit(submit-changepwd)', function(pwdData){
+                pwdData.field.action = 'edit';
+                if(!pwdData.field.password){ layer.msg('密码不能为空', {icon: 0}); return false; }
+                doPost('/admin/users', pwdData.field, function(res){
+                  if(res.code === 0){
+                    layer.close(index);
+                    layer.msg('密码修改成功', {icon: 1});
+                    table.reload('user-table');
+                  } else {
+                    layer.msg(res.msg, {icon: 2});
+                  }
+                });
+                return false;
+              });
+            }
+          });
+        }
+      });
+
+      // Batch delete
+      $('#btn-batch-del').on('click', function(){
+        var checkStatus = table.checkStatus('user-table');
+        if(checkStatus.data.length === 0){ layer.msg('请选择要删除的用户', {icon: 0}); return; }
+        var hasAdmin = false;
+        var ids = [];
+        for(var i = 0; i < checkStatus.data.length; i++){
+          if(checkStatus.data[i].username === 'admin'){ hasAdmin = true; continue; }
+          ids.push(checkStatus.data[i].id);
+        }
+        if(hasAdmin){ layer.msg('已自动跳过系统用户 admin', {icon: 0}); }
+        if(ids.length === 0){ layer.msg('没有可选择删除的用户', {icon: 0}); return; }
+        layer.confirm('确定要注销选中的 ' + ids.length + ' 个用户吗？', {icon: 3, title: '批量注销'}, function(cIndex){
+          doPost('/admin/users', {action: 'batch_delete', ids: ids.join(',')}, function(res){
+            if(res.code === 0){
+              layer.close(cIndex);
+              layer.msg('批量注销成功', {icon: 1});
+              table.reload('user-table');
+            } else {
+              layer.msg(res.msg, {icon: 2});
+            }
+          });
+        });
+      });
+    });
+  </script>
+</body>
+</html>

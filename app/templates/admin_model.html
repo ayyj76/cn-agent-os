@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>模型引擎</title>
+  <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/dist/layui-v2.13.6/layui/css/layui.css">
+  <link rel="stylesheet" href="/static/dist/fontawesome-free-5.15.4-web/css/all.min.css">
+  <style>
+    body {
+      padding: 24px;
+      margin: 0;
+      background: transparent;
+      font-family: var(--font-body);
+    }
+    
+    .page-container {
+      min-height: 100%;
+    }
+
+    .toolbar {
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    
+    .toolbar .search-box {
+      position: relative;
+      width: 320px;
+    }
+    
+    .toolbar .search-box input {
+      padding-right: 44px;
+    }
+    
+    .toolbar .search-box .search-icon {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 16px;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+    }
+    
+    .toolbar .search-box .search-icon:hover {
+      color: var(--primary-light);
+    }
+
+    .action-btn {
+      height: 42px !important;
+      line-height: 42px !important;
+      padding: 0 20px !important;
+      font-size: 13px !important;
+      border-radius: 8px !important;
+    }
+
+    .model-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    
+    @media(max-width:1200px){.model-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:768px){.model-grid{grid-template-columns:1fr}}
+
+    .model-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      height: 290px;
+    }
+    
+    .model-card.disabled {
+      opacity: 0.5;
+    }
+    
+    .model-card .card-badge {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 2;
+    }
+
+    .card-header {
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border-bottom: 1px solid var(--border-color);
+      position: relative;
+    }
+    
+    .card-header .model-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      background: rgba(99, 102, 241, 0.1);
+      color: var(--primary-light);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      flex-shrink: 0;
+    }
+    
+    .card-header .model-icon.default-bg {
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--warning-color);
+      border-color: rgba(245, 158, 11, 0.2);
+    }
+    
+    .card-header .model-info {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .card-header .model-info h3 {
+      font-family: var(--font-title);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin: 0 0 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .card-header .model-info .model-code {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'SF Mono', Consolas, monospace;
+    }
+    
+    .card-header .card-actions {
+      flex-shrink: 0;
+    }
+
+    .card-body {
+      padding: 20px;
+      flex: 1;
+    }
+    
+    .card-body .desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 12px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      min-height: 38px;
+    }
+    
+    .card-body .meta-row {
+      display: flex;
+      gap: 12px;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    
+    .card-body .meta-row span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 0 0 16px 16px;
+    }
+    
+    .card-footer .token-info {
+      display: flex;
+      gap: 12px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    
+    .card-footer .token-info .token-val {
+      color: var(--primary-light);
+      font-weight: 600;
+    }
+    
+    .card-footer .footer-btns {
+      display: flex;
+      gap: 6px;
+    }
+    
+    .card-footer .footer-btns a {
+      font-size: 11px;
+      padding: 0 10px;
+      height: 26px;
+      line-height: 26px;
+      border-radius: 6px;
+    }
+
+    .page-bar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 0;
+    }
+    
+    .page-bar .page-btn {
+      width: 38px;
+      height: 38px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      transition: var(--transition-smooth);
+    }
+    
+    .page-bar .page-btn:hover {
+      border-color: var(--primary-light);
+      color: var(--primary-light);
+    }
+    
+    .page-bar .page-btn.active {
+      background: var(--primary-color);
+      border-color: var(--primary-color);
+      color: #fff;
+    }
+    
+    .page-bar .page-btn:disabled {
+      opacity: 0.25;
+      cursor: not-allowed;
+    }
+    
+    .page-bar .page-info {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin: 0 12px;
+    }
+
+    /* Stats Panel styling */
+    .stats-panel {
+      background: var(--bg-panel);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+      padding: 24px;
+      margin-bottom: 24px;
+      display: none;
+      box-shadow: var(--glass-shadow);
+    }
+    
+    .stats-panel.show {
+      display: block;
+    }
+    
+    .stats-title {
+      font-family: var(--font-title);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .token-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      height: 150px;
+      padding: 0 8px;
+      overflow-x: auto;
+    }
+    
+    .token-chart::-webkit-scrollbar {
+      height: 4px;
+    }
+    
+    .token-chart .bar-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      min-width: 24px;
+    }
+    
+    .token-chart .bar-item .bar {
+      width: 100%;
+      border-radius: 4px 4px 0 0;
+      transition: height 0.4s ease-out;
+      cursor: pointer;
+      min-height: 2px;
+    }
+    
+    .token-chart .bar-item .bar-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      max-height: 60px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    /* Chat sandbox panel styling */
+    .chat-panel {
+      background: var(--bg-panel);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+      padding: 24px;
+      margin-bottom: 24px;
+      display: none;
+      box-shadow: var(--glass-shadow);
+    }
+    
+    .chat-panel.show {
+      display: block;
+    }
+    
+    .chat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 12px;
+    }
+    
+    .chat-header .model-label {
+      font-family: var(--font-title);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .chat-header .model-label .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success-color);
+      box-shadow: 0 0 10px var(--success-color);
+    }
+    
+    .chat-messages {
+      height: 380px;
+      overflow-y: auto;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      margin-bottom: 16px;
+      font-size: 13.5px;
+      line-height: 1.8;
+    }
+    
+    .chat-messages .msg {
+      margin-bottom: 16px;
+      display: flex;
+      gap: 12px;
+    }
+    
+    .chat-messages .msg.user {
+      flex-direction: row-reverse;
+    }
+    
+    .chat-messages .msg .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    
+    .chat-messages .msg.user .avatar {
+      background: var(--primary-color);
+      color: #fff;
+    }
+    
+    .chat-messages .msg.assistant .avatar {
+      background: var(--accent-color);
+      color: #fff;
+    }
+    
+    .chat-messages .msg .bubble {
+      max-width: 75%;
+      padding: 12px 18px;
+      border-radius: 12px;
+      word-break: break-word;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    .chat-messages .msg.user .bubble {
+      background: var(--primary-color);
+      color: #fff;
+      border-bottom-right-radius: 2px;
+    }
+    
+    .chat-messages .msg.assistant .bubble {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-bottom-left-radius: 2px;
+    }
+    
+    .chat-input-area {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .chat-input-area textarea {
+      flex: 1;
+      height: 48px;
+      max-height: 120px;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      font-size: 13.5px;
+      color: var(--text-main);
+      resize: none;
+      outline: none;
+      font-family: inherit;
+      transition: var(--transition-smooth);
+    }
+    
+    .chat-input-area textarea:focus {
+      border-color: var(--primary-light);
+      background: rgba(255,255,255,0.05);
+    }
+    
+    .chat-input-area .send-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      border: none;
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition-smooth);
+      flex-shrink: 0;
+    }
+    
+    .chat-input-area .send-btn:hover {
+      transform: scale(1.05);
+    }
+    
+    .chat-input-area .send-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .token-usage-bar {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      padding: 8px 12px;
+      margin-top: 10px;
+      border-radius: 8px;
+      background: rgba(0,0,0,0.1);
+      justify-content: flex-end;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 80px 0;
+      color: var(--text-muted);
+    }
+    
+    .empty-state i {
+      font-size: 64px;
+      display: block;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .empty-state p {
+      font-size: 15px;
+      margin-bottom: 8px;
+      color: var(--text-main);
+    }
+    
+    .empty-state .sub {
+      font-size: 12px;
+    }
+    
+    .layui-form-label {
+      color: var(--text-muted) !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-container">
+    <div class="toolbar">
+      <div class="search-box">
+        <input type="text" id="search-input" class="form-input-premium" placeholder="搜索模型名称或编码..." autocomplete="off">
+        <i class="fas fa-search search-icon" id="btn-search"></i>
+      </div>
+      
+      <button class="layui-btn layui-btn-primary" id="btn-stats" style="height:42px;line-height:42px;border-radius:8px;background:rgba(255,255,255,0.03);color:var(--text-main);border-color:var(--border-color);"><i class="fas fa-chart-bar" style="margin-right:6px;"></i> Token消耗监控</button>
+      
+      <button class="glow-btn action-btn" id="btn-add" style="margin-left:auto;"><i class="fas fa-link" style="margin-right:6px;"></i> 接入新模型服务</button>
+    </div>
+
+    <!-- Stats Trend Panel -->
+    <div class="stats-panel" id="stats-panel">
+      <div class="stats-title">
+        <i class="fas fa-chart-line" style="color: var(--accent-color);"></i> 最近 30 次推理 Token 消耗趋势统计
+        <span style="margin-left:auto;font-size:14px;color:var(--text-muted);cursor:pointer;" id="btn-close-stats">
+          <i class="fas fa-times"></i>
+        </span>
+      </div>
+      <div class="token-chart" id="token-chart"></div>
+    </div>
+
+    <!-- Dialog testing panel -->
+    <div class="chat-panel" id="chat-panel">
+      <div class="chat-header">
+        <div class="model-label">
+          <span class="dot pulse-glow"></span>
+          <span>推理测试沙盒 - <span id="chat-model-name" class="text-gradient">--</span></span>
+        </div>
+        <span style="font-size:13px;color:var(--text-muted);cursor:pointer;" id="btn-close-chat">
+          <i class="fas fa-times-circle" style="margin-right:4px;"></i> 关闭测试
+        </span>
+      </div>
+      
+      <div class="chat-messages" id="chat-messages"></div>
+      
+      <div class="chat-input-area">
+        <textarea id="chat-input" placeholder="输入测试对话消息，按回车(Enter)发送推理请求..." rows="1" disabled></textarea>
+        <button class="send-btn" id="btn-send" disabled>
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+      <div class="token-usage-bar" id="token-usage-bar" style="display:none"></div>
+    </div>
+
+    <!-- Card layout grid -->
+    <div class="model-grid" id="model-grid"></div>
+    <div class="page-bar" id="page-bar"></div>
+  </div>
+
+  <!-- Model Service form template -->
+  <script type="text/html" id="form-tpl">
+    <form class="layui-form" lay-filter="model-form" style="padding:24px 30px 0; background: transparent;" id="model-form-el">
+      <input type="hidden" name="id" value="">
+      <div class="layui-form-item">
+        <label class="layui-form-label">模型名称</label>
+        <div class="layui-input-block">
+          <input type="text" name="model_name" class="layui-input" placeholder="例如 DeepSeek-V3" autocomplete="off" required>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">模型标识</label>
+        <div class="layui-input-block">
+          <input type="text" name="model_code" class="layui-input" placeholder="接口调用标识，如 deepseek-v3" autocomplete="off" id="form-model-code" required>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">API基准地址</label>
+        <div class="layui-input-block">
+          <input type="text" name="api_base_url" class="layui-input" placeholder="OpenAI范式地址，如 https://api.deepseek.com/v1" autocomplete="off" required>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">API Key</label>
+        <div class="layui-input-block">
+          <input type="password" name="api_key" class="layui-input" placeholder="输入接口凭证密钥 (sk-...)" autocomplete="off" required>
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">默认调用</label>
+        <div class="layui-input-block" style="padding-top: 5px;">
+          <input type="checkbox" name="is_default" lay-skin="switch" lay-text="是|否" value="1">
+        </div>
+      </div>
+      <div class="layui-form-item">
+        <label class="layui-form-label">可用状态</label>
+        <div class="layui-input-block">
+          <input type="radio" name="status" value="1" title="开启" checked>
+          <input type="radio" name="status" value="0" title="禁用">
+        </div>
+      </div>
+      <div class="layui-form-item layui-form-text">
+        <label class="layui-form-label">配置描述</label>
+        <div class="layui-input-block">
+          <textarea name="description" class="layui-textarea" placeholder="关于该模型引擎服务的补充说明描述..." rows="2"></textarea>
+        </div>
+      </div>
+      <div class="layui-form-item" style="margin-top: 24px;">
+        <div class="layui-input-block" style="text-align:right;">
+          <button class="glow-btn" lay-submit lay-filter="submit-form" style="height:36px;padding:0 24px;margin-right:12px;">保存</button>
+          <button class="layui-btn layui-btn-primary" type="button" style="height:36px;border-radius:8px;background:rgba(255,255,255,0.03);color:var(--text-main);border-color:var(--border-color);">取消</button>
+        </div>
+      </div>
+    </form>
+  </script>
+
+  <script src="/static/dist/layui-v2.13.6/layui/layui.js"></script>
+  <script>
+    var _xsrf = '{{ xsrf_token }}';
+
+    layui.use(['layer','form','jquery'], function(){
+      var layer = layui.layer, form = layui.form, $ = layui.jquery;
+
+      function doPost(url, data, callback){
+        var d = {_xsrf: _xsrf};
+        for(var k in data){ d[k] = data[k]; }
+        $.post(url, d, callback);
+      }
+
+      var allModels = [];
+      var currentPage = 1;
+      var pageSize = 6;
+      var chatModelId = null;
+      var isStreaming = false;
+
+      var formMode = 'add';
+      var formEditModel = null;
+
+      function loadModels(callback){
+        doPost('/admin/models', {action: 'list', page: 1, limit: 1000}, function(res){
+          if(res.code === 0){
+            allModels = res.data;
+            renderPage();
+            if(callback) callback();
+          }
+        });
+      }
+
+      function renderPage(){
+        var keyword = ($('#search-input').val()||'').trim().toLowerCase();
+        var filtered = allModels;
+        if(keyword){
+          filtered = allModels.filter(function(m){
+            return m.model_name.toLowerCase().indexOf(keyword)>=0 || m.model_code.toLowerCase().indexOf(keyword)>=0;
+          });
+        }
+        var total = filtered.length;
+        var totalPages = Math.ceil(total/pageSize)||1;
+        if(currentPage > totalPages) currentPage = totalPages;
+        var start = (currentPage - 1) * pageSize;
+        var pageData = filtered.slice(start, start + pageSize);
+
+        renderCards(pageData);
+        renderPageBar(total, totalPages);
+      }
+
+      function formatBytes(num){
+        if(num >= 1000000) return (num/1000000).toFixed(1) + 'M';
+        if(num >= 1000) return (num/1000).toFixed(1) + 'K';
+        return String(num);
+      }
+
+      function renderCards(models){
+        var html = '';
+        if(models.length === 0){
+          html = '<div class="empty-state glass-card" style="grid-column:1/-1"><i class="fas fa-cube"></i><p>当前系统未接入任何大语言模型引擎</p><p class="sub">请点击右上角“接入新模型服务”建立API通道集成</p></div>';
+        }
+        for(var i = 0; i < models.length; i++){
+          var m = models[i];
+          var dis = m.status === 0 ? ' disabled' : '';
+          var iconBg = m.is_default === 1 ? ' default-bg' : '';
+          var defaultBadge = m.is_default === 1 ? '<span class="badge-glow layui-badge" style="background:linear-gradient(135deg, #f59e0b, #d97706);border:none;">系统预设默认</span>' : '';
+          var statusBadge = m.status === 1 ? '<span class="layui-badge" style="background:#10b981;border:none;">活跃中</span>' : '<span class="layui-badge" style="background:#64748b;border:none;">不可用</span>';
+          var desc = m.description || '关于此大模型推理引擎未作详细备注描述说明。';
+          var tokens = formatBytes(m.total_tokens||0);
+          var reqCount = m.request_count||0;
+
+          html += '<div class="model-card glass-card' + dis + '" data-id="' + m.id + '">';
+          html += '<div class="card-badge">' + defaultBadge + '</div>';
+          html += '<div class="card-header">';
+          html += '<div class="model-icon ' + iconBg + '"><i class="fas fa-brain"></i></div>';
+          html += '<div class="model-info">';
+          html += '<h3 title="'+m.model_name+'">' + m.model_name + '</h3>';
+          html += '<span class="model-code">' + m.model_code + '</span>';
+          html += '</div>';
+          html += '<div class="card-actions">' + statusBadge + '</div>';
+          html += '</div>';
+          
+          html += '<div class="card-body">';
+          html += '<div class="desc">' + desc + '</div>';
+          html += '<div class="meta-row">';
+          var shortUrl = m.api_base_url.length > 36 ? m.api_base_url.substring(0, 36) + '...' : m.api_base_url;
+          html += '<span title="'+m.api_base_url+'"><i class="fas fa-link"></i> Endpoint: ' + shortUrl + '</span>';
+          html += '</div>';
+          html += '<div class="meta-row"><span><i class="fas fa-calendar-alt"></i> 接入时间: ' + m.create_at + '</span></div>';
+          html += '</div>';
+          
+          html += '<div class="card-footer">';
+          html += '<div class="token-info">';
+          html += '<span>Tokens: <span class="token-val">' + tokens + '</span></span>';
+          html += '<span style="margin-left:8px;">推理请求: <span class="token-val">' + reqCount + '</span></span>';
+          html += '</div>';
+          html += '<div class="footer-btns">';
+          html += '<a class="glow-btn" style="height:26px;line-height:26px;font-size:12px;padding:0 12px;" data-action="chat"><i class="fas fa-comments"></i> 对话</a>';
+          html += '<a class="layui-btn layui-btn-xs" style="height:26px;line-height:26px;border-radius:6px;background:rgba(255,255,255,0.03);color:var(--text-main);border:1px solid var(--border-color);" data-action="edit"><i class="fas fa-cog"></i></a>';
+          html += '<a class="layui-btn layui-btn-xs layui-btn-danger" style="height:26px;line-height:26px;border-radius:6px;" data-action="del"><i class="fas fa-trash-alt"></i></a>';
+          html += '</div>';
+          html += '</div>';
+          html += '</div>';
+        }
+        $('#model-grid').html(html);
+        bindCardEvents();
+      }
+
+      function renderPageBar(total, totalPages){
+        var html = '';
+        html += '<button class="page-btn" ' + (currentPage <= 1 ? 'disabled' : '') + ' data-page="' + (currentPage-1) + '"><i class="fas fa-chevron-left"></i></button>';
+        for(var p=1; p<=totalPages; p++){
+          html += '<button class="page-btn' + (p === currentPage ? ' active' : '') + '" data-page="' + p + '">' + p + '</button>';
+        }
+        html += '<button class="page-btn" ' + (currentPage >= totalPages ? 'disabled' : '') + ' data-page="' + (currentPage+1) + '"><i class="fas fa-chevron-right"></i></button>';
+        html += '<span class="page-info">共 ' + total + ' 条模型 / ' + totalPages + ' 页</span>';
+        $('#page-bar').html(html);
+
+        $('#page-bar .page-btn[data-page]').on('click', function(){
+          var p = parseInt($(this).data('page'));
+          if(p < 1 || p > totalPages) return;
+          currentPage = p;
+          renderPage();
+          $('html,body').animate({scrollTop:0}, 200);
+        });
+      }
+
+      function bindCardEvents(){
+        $('#model-grid .footer-btns a').on('click', function(e){
+          e.stopPropagation();
+          var card = $(this).closest('.model-card');
+          var id = parseInt(card.data('id'));
+          var model = allModels.find(function(m){ return m.id === id; });
+          if(!model) return;
+          var action = $(this).data('action');
+          if(action === 'chat') { openChat(model); }
+          else if(action === 'edit') { openForm('edit', model); }
+          else if(action === 'del') { deleteModel(model); }
+        });
+      }
+
+      function openChat(model){
+        chatModelId = model.id;
+        isStreaming = false;
+        $('#chat-model-name').text(model.model_name + ' (' + model.model_code + ')');
+        $('#chat-messages').html('<div style="text-align:center;color:var(--text-muted);padding:30px 0;"><i class="fas fa-terminal" style="font-size:24px;display:block;margin-bottom:8px;color:var(--accent-color)"></i> MineAgentOS 终端会话已建立。请输入消息并发送。</div>');
+        $('#chat-input').val('').prop('disabled', false).focus();
+        $('#btn-send').prop('disabled', false);
+        $('#token-usage-bar').hide().html('');
+        $('#chat-panel').addClass('show');
+        $('#chat-messages').scrollTop(0);
+      }
+
+      $('#btn-close-chat').on('click', function(){
+        chatModelId = null;
+        isStreaming = false;
+        $('#chat-panel').removeClass('show');
+        $('#chat-messages').html('');
+      });
+
+      function appendMessage(role, content){
+        var avatarIcon = role === 'user' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-brain"></i>';
+        var cls = role === 'user' ? 'user' : 'assistant';
+        var html = '<div class="msg ' + cls + '">';
+        html += '<div class="avatar">' + avatarIcon + '</div>';
+        html += '<div class="bubble">' + content.replace(/\n/g, '<br>') + '</div>';
+        html += '</div>';
+        $('#chat-messages').append(html);
+        $('#chat-messages').scrollTop($('#chat-messages')[0].scrollHeight);
+      }
+
+      function handleSSEResponse(modelId, message, streamingMsgElem){
+        var deferred = $.Deferred();
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/admin/models/chat', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.setRequestHeader('Accept', 'text/event-stream');
+        var fullContent = '';
+        var lastIndex = 0;
+        var usageInfo = null;
+
+        xhr.onprogress = function(){
+          var newText = xhr.responseText.substring(lastIndex);
+          lastIndex = xhr.responseText.length;
+          var lines = newText.split('\n');
+          for(var i = 0; i < lines.length; i++){
+            if(lines[i].indexOf('data: ') !== 0) continue;
+            try{
+              var json = JSON.parse(lines[i].substring(6));
+              if(json.type === 'content'){
+                fullContent += json.content;
+                streamingMsgElem.find('.bubble').html(fullContent.replace(/\n/g, '<br>'));
+                $('#chat-messages').scrollTop($('#chat-messages')[0].scrollHeight);
+              } else if(json.type === 'done') {
+                usageInfo = json.usage;
+              } else if(json.type === 'error') {
+                deferred.reject(json.content);
+              }
+            } catch(e) {}
+          }
+        };
+
+        xhr.onload = function(){
+          if(usageInfo){
+            var u = usageInfo;
+            $('#token-usage-bar').show().html(
+              '<span><i class="fas fa-calculator" style="margin-right:6px;"></i> 消耗 Token 数: ' + u.prompt_tokens + ' Input + ' + u.completion_tokens + ' Output = ' + u.total_tokens + '</span>' +
+              '<span style="margin-left:16px;"><i class="fas fa-stopwatch" style="margin-right:6px;"></i> 本次耗时: ' + (u.duration_ms/1000).toFixed(2) + 's</span>'
+            );
+            deferred.resolve({content: fullContent, usage: usageInfo});
+          } else {
+            deferred.resolve({content: fullContent});
+          }
+        };
+
+        xhr.onerror = function(){
+          deferred.reject('大模型服务请求通信失败');
+        };
+
+        isStreaming = true;
+        var body = '_xsrf=' + encodeURIComponent(_xsrf) + '&model_id=' + modelId + '&message=' + encodeURIComponent(message);
+        xhr.send(body);
+        return deferred.promise();
+      }
+
+      function sendMessage(){
+        if(isStreaming) return;
+        var msg = $('#chat-input').val().trim();
+        if(!msg || !chatModelId) return;
+        
+        // Clear terminal start indicator on first message
+        if ($('#chat-messages').find('.fa-terminal').length > 0) {
+          $('#chat-messages').html('');
+        }
+
+        $('#chat-input').val('').prop('disabled', true);
+        $('#btn-send').prop('disabled', true);
+
+        appendMessage('user', msg);
+        var msgElem = $('<div class="msg assistant">' +
+          '<div class="avatar"><i class="fas fa-brain"></i></div>' +
+          '<div class="bubble" style="color:var(--text-muted)"><i class="fas fa-spinner fa-spin" style="margin-right:8px;"></i> 思考响应中...</div>' +
+          '</div>');
+        $('#chat-messages').append(msgElem);
+        $('#chat-messages').scrollTop($('#chat-messages')[0].scrollHeight);
+
+        handleSSEResponse(chatModelId, msg, msgElem).then(function(result){
+          isStreaming = false;
+          $('#chat-input').prop('disabled', false).focus();
+          $('#btn-send').prop('disabled', false);
+          loadModels();
+        }).fail(function(err){
+          isStreaming = false;
+          msgElem.find('.bubble').html('<span style="color:var(--danger-color)"><i class="fas fa-exclamation-triangle" style="margin-right:6px;"></i> 接口响应异常: ' + err + '</span>');
+          $('#chat-input').prop('disabled', false).focus();
+          $('#btn-send').prop('disabled', false);
+        });
+      }
+
+      $('#btn-send').on('click', sendMessage);
+      $('#chat-input').on('keydown', function(e){
+        if(e.keyCode === 13 && !e.shiftKey){ e.preventDefault(); sendMessage(); }
+      });
+
+      $('#btn-search').on('click', function(){ currentPage = 1; renderPage(); });
+      $('#search-input').on('keydown', function(e){
+        if(e.keyCode === 13){ currentPage = 1; renderPage(); }
+      });
+
+      // Submit model form
+      form.on('submit(submit-form)', function(data){
+        data.field.action = formMode;
+        if(formMode === 'edit' && formEditModel){
+          data.field.id = formEditModel.id;
+        }
+        
+        // Handle layui checkbox switch value format
+        data.field.is_default = data.field.is_default ? '1' : '0';
+
+        doPost('/admin/models', data.field, function(res){
+          if(res.code === 0){
+            layer.closeAll();
+            layer.msg(formMode === 'add' ? '接入配置成功' : '修改成功', {icon: 1});
+            loadModels();
+          } else {
+            layer.msg(res.msg, {icon: 2});
+          }
+        });
+        return false;
+      });
+
+      $('#btn-add').on('click', function(){ openForm('add', null); });
+
+      function openForm(mode, model){
+        formMode = mode;
+        formEditModel = model || null;
+        
+        var index = layer.open({
+          type: 1, title: mode==='add' ? '接入新模型服务' : '编辑模型接口配置', area: ['580px', '630px'], content: $('#form-tpl').html(),
+          success: function(layero){
+            form.render();
+            if(mode === 'edit' && model){
+              form.val('model-form', {
+                id: model.id,
+                model_name: model.model_name,
+                model_code: model.model_code,
+                api_base_url: model.api_base_url,
+                api_key: model.api_key,
+                status: model.status,
+                description: model.description||''
+              });
+              layero.find('#form-model-code').prop('disabled', true).addClass('layui-disabled');
+              layero.find('input[name="is_default"]').prop('checked', model.is_default === 1);
+              layero.find('input[name="status"][value="'+model.status+'"]').prop('checked', true);
+              form.render();
+            }
+            
+            layero.find('button.layui-btn-primary').on('click', function(){
+              layer.close(index);
+            });
+          }
+        });
+      }
+
+      function deleteModel(model){
+        layer.confirm('确定要移除AI大模型「'+model.model_name+'」吗？<br><span style="color:var(--text-muted);font-size:12px">相关推理日志和 Token 消耗统计记录也将被彻底清空。</span>', {icon: 3, title: '移除模型引擎'}, function(cIndex){
+          doPost('/admin/models', {action: 'delete', id: model.id}, function(res){
+            if(res.code === 0){
+              layer.close(cIndex);
+              layer.msg('已成功移除模型', {icon: 1});
+              loadModels();
+            } else {
+              layer.msg(res.msg, {icon: 2});
+            }
+          });
+        });
+      }
+
+      // Draw SVG/CSS stats trend charts
+      $('#btn-stats').on('click', function(){
+        doPost('/admin/models', {action: 'stats'}, function(res){
+          if(res.code === 0 && res.data.length > 0){
+            var stats = res.data.reverse();
+            var maxTokens = 0;
+            for(var i=0; i<stats.length; i++){
+              if(stats[i].total_tokens > maxTokens) maxTokens = stats[i].total_tokens;
+            }
+            if(maxTokens === 0) maxTokens = 1;
+            var html = '';
+            for(var j=0; j<stats.length; j++){
+              var s = stats[j];
+              var h = Math.max(4, Math.round((s.total_tokens / maxTokens) * 100));
+              var color = s.success === 1 ? 'linear-gradient(180deg, #6366f1, #8b5cf6)' : 'linear-gradient(180deg, #ef4444, #b91c1c)';
+              var label = '';
+              if(s.create_at && s.create_at.length >= 16) label = s.create_at.substring(5, 16);
+              
+              html += '<div class="bar-item">';
+              html += '<span style="font-size:9px;color:var(--text-muted);">' + formatBytes(s.total_tokens) + '</span>';
+              html += '<div class="bar" style="height:'+h+'px; background:'+color+'; box-shadow:0 0 10px rgba(99,102,241,0.25)" title="' + s.create_at + ': ' + s.total_tokens + ' tokens"></div>';
+              html += '<span class="bar-label">' + label + '</span>';
+              html += '</div>';
+            }
+            $('#token-chart').html(html);
+            $('#stats-panel').addClass('show');
+          } else {
+            $('#token-chart').html('<div style="text-align:center;color:var(--text-muted);width:100%;padding:40px 0;"><i class="fas fa-exclamation-circle" style="font-size:24px;display:block;margin-bottom:8px;"></i> 暂无可用大模型推理 Token 消耗监测统计日志</div>');
+            $('#stats-panel').addClass('show');
+          }
+        });
+      });
+
+      $('#btn-close-stats').on('click', function(){ $('#stats-panel').removeClass('show'); });
+
+      loadModels();
+    });
+  </script>
+</body>
+</html>

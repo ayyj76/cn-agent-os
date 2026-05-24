@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>欢迎使用</title>
+  <link rel="stylesheet" href="/static/css/base.css">
+  <link rel="stylesheet" href="/static/dist/layui-v2.13.6/layui/css/layui.css">
+  <link rel="stylesheet" href="/static/dist/fontawesome-free-5.15.4-web/css/all.min.css">
+  <style>
+    body {
+      padding: 24px;
+      margin: 0;
+      background: transparent;
+      overflow-x: hidden;
+    }
+    
+    .welcome-container {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .welcome-banner {
+      display: flex;
+      gap: 24px;
+      align-items: stretch;
+      min-height: 240px;
+    }
+
+    .banner-graphic {
+      flex: 1.2;
+      background-image: url('/static/images/welcome_hero.png');
+      background-size: cover;
+      background-position: center;
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--glass-shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .banner-graphic::before {
+      content: '';
+      position: absolute;
+      top:0; left:0; right:0; bottom:0;
+      background: linear-gradient(90deg, rgba(9, 13, 22, 0.9) 0%, rgba(9, 13, 22, 0.4) 100%);
+    }
+
+    .banner-text {
+      position: relative;
+      z-index: 2;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      height: 100%;
+    }
+
+    .banner-text h2 {
+      font-family: var(--font-title);
+      font-size: 26px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .banner-text p {
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.8;
+      max-width: 520px;
+    }
+
+    .banner-sysinfo {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 30px;
+    }
+
+    .banner-sysinfo h3 {
+      font-family: var(--font-title);
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .sys-meter {
+      margin-bottom: 12px;
+    }
+
+    .sys-meter-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .sys-meter-bar {
+      height: 6px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .sys-meter-progress {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+      border-radius: 3px;
+      box-shadow: 0 0 8px rgba(99, 102, 241, 0.5);
+    }
+
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+
+    .stat-card {
+      padding: 24px;
+      text-align: left;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .stat-card .card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      background: rgba(99, 102, 241, 0.1);
+      color: var(--primary-light);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+
+    .stat-card:nth-child(2) .card-icon {
+      background: rgba(139, 92, 246, 0.1);
+      color: #a78bfa;
+      border-color: rgba(139, 92, 246, 0.2);
+    }
+
+    .stat-card:nth-child(3) .card-icon {
+      background: rgba(6, 182, 212, 0.1);
+      color: #22d3ee;
+      border-color: rgba(6, 182, 212, 0.2);
+    }
+
+    .stat-card:nth-child(4) .card-icon {
+      background: rgba(16, 185, 129, 0.1);
+      color: #34d399;
+      border-color: rgba(16, 185, 129, 0.2);
+    }
+
+    .stat-card .card-content {
+      flex: 1;
+    }
+
+    .stat-card .num {
+      font-family: var(--font-title);
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--text-main);
+      line-height: 1.2;
+    }
+
+    .stat-card .label {
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    @media(max-width: 1024px) {
+      .stat-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .welcome-banner {
+        flex-direction: column;
+      }
+    }
+
+    @media(max-width: 640px) {
+      .stat-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="welcome-container">
+    <div class="welcome-banner">
+      <div class="banner-graphic">
+        <div class="banner-text">
+          <h2 class="text-gradient">探索 AI 的无限可能</h2>
+          <p>当前 MineAgentOS 已支持多模型统一集成接入、高安全度角色访问配置、及流式推理日志审查。在下方监控中心可查看核心系统资源的空闲比率与运行状态。</p>
+        </div>
+      </div>
+      
+      <div class="banner-sysinfo glass-card">
+        <h3>运行环境监控</h3>
+        
+        <div class="sys-meter">
+          <div class="sys-meter-label"><span>CPU 使用率</span><span>12.4%</span></div>
+          <div class="sys-meter-bar">
+            <div class="sys-meter-progress" style="width: 12.4%"></div>
+          </div>
+        </div>
+
+        <div class="sys-meter">
+          <div class="sys-meter-label"><span>内存 占用量</span><span>3.1 / 16.0 GB</span></div>
+          <div class="sys-meter-bar">
+            <div class="sys-meter-progress" style="width: 19.3%; background: linear-gradient(90deg, #8b5cf6, #ec4899)"></div>
+          </div>
+        </div>
+
+        <div class="sys-meter">
+          <div class="sys-meter-label"><span>接口推理平均延迟</span><span>1.24s</span></div>
+          <div class="sys-meter-bar">
+            <div class="sys-meter-progress" style="width: 25%; background: linear-gradient(90deg, #06b6d4, #10b981)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="stat-row">
+      <div class="stat-card glass-card">
+        <div class="card-icon"><i class="fas fa-users"></i></div>
+        <div class="card-content">
+          <div class="num" id="user-count">-</div>
+          <div class="label">授权用户总数</div>
+        </div>
+      </div>
+      
+      <div class="stat-card glass-card">
+        <div class="card-icon"><i class="fas fa-user-tie"></i></div>
+        <div class="card-content">
+          <div class="num">0</div>
+          <div class="label">部署数字员工</div>
+        </div>
+      </div>
+      
+      <div class="stat-card glass-card">
+        <div class="card-icon"><i class="fas fa-brain"></i></div>
+        <div class="card-content">
+          <div class="num">1</div>
+          <div class="label">已接入大模型</div>
+        </div>
+      </div>
+      
+      <div class="stat-card glass-card">
+        <div class="card-icon"><i class="fas fa-database"></i></div>
+        <div class="card-content">
+          <div class="num">0</div>
+          <div class="label">接入数据通道</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script src="/static/dist/layui-v2.13.6/layui/layui.js"></script>
+  <script>
+    layui.use(['jquery'], function(){
+      var $ = layui.jquery;
+      // Get exact user count via backend
+      $.post('/admin/users', {action: 'list', page: 1, limit: 1}, function(res){
+        if(res && res.code === 0) {
+          $('#user-count').text(res.count);
+        } else {
+          $('#user-count').text('1'); // Default fallback
+        }
+      }, 'json');
+    });
+  </script>
+</body>
+</html>
