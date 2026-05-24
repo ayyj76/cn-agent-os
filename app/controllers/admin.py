@@ -490,45 +490,32 @@ class ModelChatSSEHandler(BaseHandler):
 
         import time
         import asyncio
+
+        # 模拟思考 2 秒
+        await asyncio.sleep(2)
+
+        start_time = time.time()
+        reply_text = f"我是{model['model_name']}，有什么可以帮助你的吗"
+        prompt_tokens = len(message)
+        completion_tokens = len(reply_text)
+        total_tokens = prompt_tokens + completion_tokens
+
         try:
-            from openai import OpenAI
-            loop = asyncio.get_event_loop()
-            client = OpenAI(api_key=model["api_key"], base_url=model["api_base_url"])
-            start_time = time.time()
+            # 模拟 SSE 流式输出字符
+            for char in reply_text:
+                data = json.dumps({"type": "content", "content": char}, ensure_ascii=False)
+                self.write(f"data: {data}\n\n")
+                await self.flush()
+                await asyncio.sleep(0.05) # 50毫秒字符间隔
 
-            stream = await loop.run_in_executor(
-                None,
-                lambda: client.chat.completions.create(
-                    model=model["model_code"],
-                    messages=[{"role": "user", "content": message}],
-                    stream=True
-                )
-            )
+            duration_ms = int((time.time() - start_time + 2) * 1000) # 包含思考的2秒时间
 
-            full_content = ""
-            prompt_tokens = 0
-            completion_tokens = 0
-
-            for chunk in stream:
-                if chunk.choices and len(chunk.choices) > 0:
-                    delta = chunk.choices[0].delta
-                    if delta.content:
-                        full_content += delta.content
-                        data = json.dumps({"type": "content", "content": delta.content}, ensure_ascii=False)
-                        self.write(f"data: {data}\n\n")
-                        await self.flush()
-                if hasattr(chunk, 'usage') and chunk.usage:
-                    prompt_tokens = getattr(chunk.usage, 'prompt_tokens', 0)
-                    completion_tokens = getattr(chunk.usage, 'completion_tokens', 0)
-
-            duration_ms = int((time.time() - start_time) * 1000)
-            total_tokens = prompt_tokens + completion_tokens
-            if total_tokens > 0:
-                ModelServiceRepository.add_token_log(model_id, prompt_tokens, completion_tokens, total_tokens, duration_ms)
+            # 添加 Token 消耗日志以更新控制面板数据
+            ModelServiceRepository.add_token_log(model_id, prompt_tokens, completion_tokens, total_tokens, duration_ms)
 
             done_data = json.dumps({
                 "type": "done",
-                "full_content": full_content,
+                "full_content": reply_text,
                 "usage": {
                     "prompt_tokens": prompt_tokens,
                     "completion_tokens": completion_tokens,
